@@ -1,0 +1,45 @@
+MDScreen:
+
+    MainScreen:
+        name: "MainScreen"
+        MDBoxLayout:
+            orientation: "vertical"
+
+            MDToolbar:
+                title: "OPNsense Manager"
+            MDTabs:
+                id: tabs
+                on_tab_switch: app.on_tab_switch(*args)
+                Tab:
+                    title:"Rules"
+                    ScrollView:
+                        MDList:
+                            id:ruleList
+                Tab:
+                    text:"VPN"
+                    MDRelativeLayout:
+                        MDLabel:
+                            text: "VPN ON/OFF"
+                            bold: True
+                            pos_hint:{'center_x':.6,'center_y':.9}
+                        MDSwitch:
+                            id: WG_switch
+                            pos_hint: {'center_x': .5, 'center_y': .9}
+                            on_press: app.on_wg_active(*args)
+                Tab:
+                    text:"Power"
+                    bold: True
+                    MDRelativeLayout:
+                        MDFillRoundFlatButton:
+                            pos_hint:{'center_x':.2,'center_y':.9}
+                            text: "Reboot"
+                            on_release:
+                                app.print_children()
+                Tab:
+                    text:"Support"
+                    MDRelativeLayout:
+                        MDFillRoundFlatButton:
+                            pos_hint:{'center_x':.2,'center_y':.9}
+                            text: "Email Admin"
+                            on_release:
+                                app.support_email()
