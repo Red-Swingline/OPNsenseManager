@@ -1,45 +1,79 @@
-MDScreen:
-
-    MainScreen:
-        name: "MainScreen"
-        MDBoxLayout:
-            orientation: "vertical"
-
-            MDToolbar:
-                title: "OPNsense Manager"
-            MDTabs:
-                id: tabs
-                on_tab_switch: app.on_tab_switch(*args)
-                Tab:
-                    title:"Rules"
-                    ScrollView:
-                        MDList:
-                            id:ruleList
-                Tab:
-                    text:"VPN"
-                    MDRelativeLayout:
-                        MDLabel:
-                            text: "VPN ON/OFF"
-                            bold: True
-                            pos_hint:{'center_x':.6,'center_y':.9}
-                        MDSwitch:
-                            id: WG_switch
-                            pos_hint: {'center_x': .5, 'center_y': .9}
-                            on_press: app.on_wg_active(*args)
-                Tab:
-                    text:"Power"
-                    bold: True
-                    MDRelativeLayout:
-                        MDFillRoundFlatButton:
-                            pos_hint:{'center_x':.2,'center_y':.9}
-                            text: "Reboot"
-                            on_release:
-                                app.print_children()
-                Tab:
-                    text:"Support"
-                    MDRelativeLayout:
-                        MDFillRoundFlatButton:
-                            pos_hint:{'center_x':.2,'center_y':.9}
-                            text: "Email Admin"
-                            on_release:
-                                app.support_email()
+Screen:
+    ScreenManager:
+        id: screen_manager    
+        Screen:
+            name: "MainScreen"
+            MDBoxLayout:
+                id:tabs
+                orientation: "vertical"
+                MDToolbar:
+                    title: "OPNsense Manager"
+                MDTabs:
+                    id: tabs
+                    on_tab_switch: app.on_tab_switch(*args)
+                    Tab:
+                        title:"Rules"
+                        ScrollView:
+                            MDList:
+                                id:ruleList
+                    Tab:
+                        text:"VPN"
+                        MDRelativeLayout:
+                            MDLabel:
+                                text: "VPN ON/OFF"
+                                bold: True
+                                pos_hint:{'center_x':.6,'center_y':.9}
+                            MDSwitch:
+                                id: wg_switch
+                                pos_hint: {'center_x': .5, 'center_y': .9}
+                                on_press: app.on_wg_active(*args)
+                    Tab:
+                        text:"Power"
+                        bold: True
+                        MDRelativeLayout:
+                            MDFillRoundFlatButton:
+                                pos_hint:{'center_x':.2,'center_y':.9}
+                                text: "Reboot"
+                                on_release:
+                                    app.print_children()
+                    Tab:
+                        text:"Admin"
+                        MDRelativeLayout:
+                            MDFillRoundFlatButton:
+                                pos_hint:{'center_x':.2,'center_y':.9}
+                                text: "Email Admin"
+                                on_release:
+                                    app.support_email()
+                            MDFillRoundFlatButton:
+                                pos_hint:{'center_x':.5,'center_y':.9}
+                                text: "Add Rule"
+                                on_release:
+                                    screen_manager.current = 'add_rules'
+        Screen:
+            name: "add_rules"
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: "10dp"
+                MDTextField:
+                    id: rule_description
+                    pos_hint: {'center_x': .3, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"
+                    hint_text: "Enter Description"
+                    helper_text: "Description"
+                    helper_text_mode: "on_focus"                   
+                MDTextField:
+                    id: rule_uuid
+                    pos_hint: {'center_x': .3, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"                           
+                    hint_text: "Enter UUID"
+                    helper_text: "UUID"
+                    helper_text_mode: "on_focus"
+                MDRaisedButton:
+                    text: "Submit"
+                    pos_hint: {'center_x': .3, 'center_y': .4}
+                    elevation: 10
+                    on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
+                Widget:
+            Widget:

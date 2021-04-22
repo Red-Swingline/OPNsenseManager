@@ -8,21 +8,12 @@ from smtplib import SMTP_SSL as SMTP
 from email.mime.text import MIMEText
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivymd.uix import MDAdaptiveWidget
-from kivymd.uix.list import TwoLineAvatarIconListItem, ImageLeftWidget
+from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget
 from db import *
-import multiprocessing
+import threading
 import requests
 import json
 import yaml
-
-
-class MainScreen(Screen, MDAdaptiveWidget):
-    pass
-
-
-class AddRuleScreen(Screen, MDAdaptiveWidget):
-    pass
 
 
 class Tab(MDFloatLayout, MDTabsBase):
@@ -33,13 +24,11 @@ class MainApp(MDApp):
     with open("config.yaml", "r") as ymlfile:
         cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-    reboot_OPN = f'{cfg["host"]}:{cfg["port"]}/api/core/system/reboot/'
-    save_point = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/savepoint'
+    reboot_opn = f'{cfg["host"]}:{cfg["port"]}/api/core/system/reboot/'
     apply = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/apply'
-    rules = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/searchRule'
-    check_WG = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/get'
-    Start_WG = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/set'
-    save_WG = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/service/reconfigure'
+    check_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/get'
+    Start_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/set'
+    save_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/service/reconfigure'
 
     key = cfg["key"]
     secret = cfg["secret"]
@@ -51,7 +40,8 @@ class MainApp(MDApp):
 
     def build(self):
         self.theme_cls.primary_palette = 'BlueGray'
-        return Builder.load_file("main.kv")
+        self.screen = Builder.load_file("main.kv")
+        return self.screen
 
     def on_tab_switch(
         self, instance_tabs, instance_tab, instance_tab_label, tab_text
@@ -65,28 +55,23 @@ class MainApp(MDApp):
         uuid TEXT NOT NULL UNIQUE
         );""")
 
-    def rule_lookup(self, *args):
-        '''Pulls complete list of firewall rules and inserts them into sqlite3 DB'''
-        check = requests.get(url=self.rules, auth=(
-            self.key, self.secret), verify=False)
-        if check.status_code == 200:
-            check_rule = json.loads(check.text)
-        for r in check_rule['rows']:
-            name = r['description']
-            uuid = r['uuid']
-            try:
-                db.execute(f'''INSERT OR REPLACE INTO rules(
+    def add_rule_clicked(self, rule_description, rule_uuid):
+        try:
+            db.execute(f'''INSERT OR REPLACE INTO rules(
                             name, uuid) VALUES
-                            ('{name}', '{uuid}')''')
+                            ('{rule_description}', '{rule_uuid}')''')
 
-            finally:
-                mydb.commit()
-                close_button = MDFlatButton(
-                    text='Close', on_release=self.close_dialog)
-                self.dialog = MDDialog(title='Rules', text='Have been updated',
-                                       size_hint=(0.7, 1),
-                                       buttons=[close_button])
-                self.dialog.open()
+        finally:
+            mydb.commit()
+            close_button = MDFlatButton(
+                text='Close', on_release=self.close_dialog)
+            self.dialog = MDDialog(title='Rules', text='Rules have been added.',
+                                   size_hint=(0.7, 1),
+                                   buttons=[close_button])
+            self.dialog.open()
+            self.root.ids.ruleList.clear_widgets()
+            self.rule_list()
+            self.root.ids.screen_manager.current = 'MainScreen'
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
@@ -94,34 +79,35 @@ class MainApp(MDApp):
         self.rows = db.fetchall()
         for r in self.rows:
             self.rule = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/getRule/{r[2]}'
-            rules = TwoLineAvatarIconListItem(
+            rules = TwoLineIconListItem(
                 text=r[1],
                 secondary_text=r[2],
-                on_release=lambda x: self.rule_on_click(x.secondary_text)
+                on_release=lambda x: threading.Thread(
+                    target=self.rule_on_click, args=(x.secondary_text, x), daemon=True).start()
             )
             self.check = requests.get(url=self.rule, auth=(
                 self.key, self.secret), verify=False)
             if self.check.status_code == 200:
                 check_rule = json.loads(self.check.text)
                 if check_rule['rule']['enabled'] == '1':
-                    rules.add_widget(ImageLeftWidget(
-                        source='on.png'
+                    rules.add_widget(IconLeftWidget(
+                        icon='checkbox-marked-circle-outline'
                     ))
                 else:
-                    rules.add_widget(ImageLeftWidget(
-                        source='off.png'
+                    rules.add_widget(IconLeftWidget(
+                        icon='checkbox-blank-circle-outline'
                     ))
 
             self.root.ids.ruleList.add_widget(rules)
 
-    def rule_on_click(self, uuid):
+    def rule_on_click(self, uuid, x):
         ''' When a rule is clicked these fuctions will check rule status, enable or disable the rule,
         clear the list view and finally recreate it with the new rule status'''
-        self.rule_check(uuid)
+        self.rule_check(uuid, x)
         self.root.ids.ruleList.clear_widgets()
         self.rule_list()
 
-    def rule_check(self, uuid):
+    def rule_check(self, uuid, x):
         '''Should check to see if a rule from the list is enabled or not. It grabs the uuid from the list view click 
             and stuffs it into the rule string'''
         toggle = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/toggleRule/{uuid}'
@@ -131,11 +117,13 @@ class MainApp(MDApp):
         if self.check.status_code == 200:
             check_rule = json.loads(self.check.text)
             if check_rule['rule']['enabled'] == '1':
-                self.rule_state_change(f'{toggle}/0')
+                new_icon = 'checkbox-blank-circle-outline'
+                self.rule_state_change(f'{toggle}/0', new_icon, x)
             else:
-                self.rule_state_change(f'{toggle}/1')
+                new_icon = 'checkbox-marked-circle-outline'
+                self.rule_state_change(f'{toggle}/1', new_icon, x)
 
-    def rule_state_change(self, r_url):
+    def rule_state_change(self, r_url, new_icon, x):
         '''Either enables or disables the selected rules based on current status of the rule in the firewall.
         Then calls status message function to inform the user what happend
         '''
@@ -145,6 +133,7 @@ class MainApp(MDApp):
         if r.status_code == 200:
             r = requests.post(url=self.apply, auth=(
                 self.key, self.secret), verify=False)
+            x.icon = new_icon
             self.status_message(r, r_url)
 
     def status_message(self, r, r_url):
@@ -174,18 +163,18 @@ class MainApp(MDApp):
                                    buttons=[close_button])
             self.dialog.open()
 
-    def check_WG1(self):
+    def check_wg1(self):
         '''Checks current status of WG '''
-        check = requests.get(url=self.check_WG, auth=(
+        check = requests.get(url=self.check_wg, auth=(
             self.key, self.secret), verify=False)
         if check.status_code == 200:
             check_rule = json.loads(check.text)
             if check_rule['general']['enabled'] == '1':
-                self.root.ids.WG_switch.active = True
+                self.root.ids.wg_switch.active = True
 
     def on_wg_active(self, *args):
         '''Enable or disable firewall rule based on current state'''
-        if self.root.ids.WG_switch.active == True:
+        if self.root.ids.wg_switch.active == True:
             data = {'general': {'enabled': 0}}
             self.wg_change_state(data)
         else:
@@ -193,10 +182,10 @@ class MainApp(MDApp):
             self.wg_change_state(data)
 
     def wg_change_state(self, data):
-        r = requests.post(url=self.Start_WG, auth=(
+        r = requests.post(url=self.Start_wg, auth=(
             self.key, self.secret), verify=False, json=data)
         if r.status_code == 200:
-            r = requests.post(url=self.save_WG, auth=(
+            r = requests.post(url=self.save_wg, auth=(
                 self.key, self.secret), verify=False)
             self.status_message(r, str(data['general']['enabled']))
 
@@ -254,4 +243,5 @@ class MainApp(MDApp):
 
 
 if __name__ == '__main__':
-    MainApp().run()
+    ma = MainApp()
+    ma.run()

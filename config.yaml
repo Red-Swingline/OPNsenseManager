@@ -5,4 +5,4 @@ secret: SECRET_HERE #Secret generated with API Key
 email_host: URL_HERE #SMTP server address
 From_email: FROM_EMAIL #From email address, this is also the assumed username for the SMTP server
 password: PASSWORD #Password for SMTP server
-To_email: TO_EMAIL #To email you would like the support request to be sentr to. 
+To_email: TO_EMAIL #To email you would like the support request to be sentr to.  
