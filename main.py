@@ -52,7 +52,7 @@ class MainApp(MDApp):
         pass
 
     def create_table(self):
-        '''Creates SQlite table if it doesnt already exsist'''
+        '''Creates SQLite table if it doesn't already exist'''
         db.execute("""CREATE TABLE  IF NOT EXISTS rules(
         id integer PRIMARY KEY,
         rname TEXT,
@@ -60,25 +60,25 @@ class MainApp(MDApp):
         );""")
 
     def rule_query(self):
-        '''Querys the SQlite table to get stored list of rules to be managed from the app.'''
+        '''Queries the SQLite table to get stored list of rules to be managed from the app.'''
         db.execute('''SELECT * from rules''')
         self.rows = db.fetchall()
         return self.rows
 
     def url_request_get(self, url):
-        '''Handels all get request for checking status with firewall API'''
+        '''Handles all get request for checking status with firewall API'''
         self.check = requests.get(url=url, auth=(
             self.key, self.secret), verify=False)
         return self.check
 
     def url_request_post(self, url):
-        '''Handels all get request for checking status with firewall API'''
+        '''Handles all post request for checking status with firewall API.'''
         self.check = requests.post(url=url, auth=(
             self.key, self.secret), verify=False)
         return self.check
 
     def call_main_screen(self):
-        '''Switches to the main screen of the app'''
+        '''Switches to the main screen of the app.'''
         self.root.ids.screen_manager.current = 'MainScreen'
 
     def add_back_arrow_clicked(self):
@@ -88,9 +88,10 @@ class MainApp(MDApp):
         self.call_main_screen()
 
     def add_rule_clicked(self, rule_description, rule_uuid):
-        ''' When the add button is clicked on the add rule screen, it will insert text feild string into SQLite table.
-            Then clear the rulelist widgets, clear the text fields, rebuild the rule list and finally switch back to the 
-            main screen.'''
+        ''' When the add button is clicked on the add rule screen, it will insert text field string into SQLite table.
+            Then clear the rule list widgets, clear the text fields, rebuild the rule list and finally switch back to the 
+            main screen.
+            '''
         des = rule_description.rstrip()
         rule = rule_uuid.strip()
         if len(rule_description) > 0 and len(rule_uuid) > 0:
@@ -195,8 +196,8 @@ class MainApp(MDApp):
         self.call_main_screen()
 
     def rule_on_click(self, uuid, x):
-        ''' When a rule is clicked these fuctions will check rule status, enable or disable the rule,
-        clear the list view and finally recreate it with the new rule status'''
+        ''' When a rule is clicked these functions will check rule status, enable or disable the rule,
+            clear the list view and finally recreate it with the new rule status.'''
         self.rule_check(uuid, x)
         self.root.ids.ruleList.clear_widgets()
         self.rule_list()
@@ -218,8 +219,7 @@ class MainApp(MDApp):
 
     def rule_state_change(self, r_url, new_icon, x):
         '''Either enables or disables the selected rules based on current status of the rule in the firewall.
-        Then calls status message function to inform the user what happend
-        '''
+            Then calls status message function to inform the user what happens'''
         self.r_url = r_url
         r = self.url_request_post(r_url)
         if r.status_code == 200:
@@ -279,7 +279,7 @@ class MainApp(MDApp):
             self.status_message(r, str(data['general']['enabled']))
 
     def reboot(self):
-        ''' Sends Reboot API call to firewall'''
+        '''Sends Reboot API call to firewall'''
         r = self.url_request_post(self.reboot_OPN)
         self.status_message(r, "reboot")
 
