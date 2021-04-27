@@ -8,7 +8,7 @@ from smtplib import SMTP_SSL as SMTP
 from email.mime.text import MIMEText
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget
+from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem
 from db import *
 import threading
 import requests
@@ -25,6 +25,7 @@ class MainApp(MDApp):
         cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     reboot_opn = f'{cfg["host"]}:{cfg["port"]}/api/core/system/reboot/'
+    rules = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/searchRule'
     apply = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/apply'
     check_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/get'
     Start_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/set'
@@ -35,8 +36,9 @@ class MainApp(MDApp):
 
     def on_start(self):
         '''Runs all on start fuctions, database creation and queries, rule status checks whatever else needs to happen on start'''
-        self.create_table()
         self.rule_list()
+        self.delete_rule_list()
+        # self.rule_lookup() #used to quickly add rules to the local database will eventually be removed
 
     def build(self):
         self.theme_cls.primary_palette = 'BlueGray'
@@ -51,14 +53,35 @@ class MainApp(MDApp):
     def create_table(self):
         db.execute("""CREATE TABLE  IF NOT EXISTS rules(
         id integer PRIMARY KEY,
-        name TEXT,
+        rname TEXT,
         uuid TEXT NOT NULL UNIQUE
         );""")
+
+    def rule_query(self):
+        db.execute('''SELECT * from rules''')
+        self.rows = db.fetchall()
+        return self.rows
+
+    #This is only here for quickly adding rules back to the local database.
+    def rule_lookup(self, *args):
+        check = requests.get(url=self.rules, auth=(
+            self.key, self.secret), verify=False)
+        if check.status_code == 200:
+            check_rule = json.loads(check.text)
+        for r in check_rule['rows']:
+            name = r['description']
+            uuid = r['uuid']
+            try:
+                db.execute(f'''INSERT OR REPLACE INTO rules(
+                            rname, uuid) VALUES
+                            ('{name}', '{uuid}')''')
+            finally:
+                mydb.commit()
 
     def add_rule_clicked(self, rule_description, rule_uuid):
         try:
             db.execute(f'''INSERT OR REPLACE INTO rules(
-                            name, uuid) VALUES
+                            rname, uuid) VALUES
                             ('{rule_description}', '{rule_uuid}')''')
 
         finally:
@@ -75,8 +98,7 @@ class MainApp(MDApp):
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
-        db.execute('''SELECT * from rules''')
-        self.rows = db.fetchall()
+        self.rule_query()
         for r in self.rows:
             self.rule = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/getRule/{r[2]}'
             rules = TwoLineIconListItem(
@@ -99,6 +121,49 @@ class MainApp(MDApp):
                     ))
 
             self.root.ids.ruleList.add_widget(rules)
+
+    def delete_rule_list(self):
+        '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
+        self.rule_query()
+        for r in self.rows:
+            rules = TwoLineListItem(
+                text=r[1],
+                secondary_text=r[2],
+                on_release=lambda x: threading.Thread(
+                    target=self.delete_rule_clicked, args=(x.text,), daemon=True).start()
+            )
+            self.root.ids.ruleList_delete.add_widget(rules)
+
+    def delete_rule_clicked(self, description):
+        self.dialog = MDDialog(
+            text="Delete Rule?",
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL", text_color=self.theme_cls.primary_color,
+                    on_release=self.close_dialog
+                ),
+                MDFlatButton(
+                    text="DELETE", text_color=self.theme_cls.primary_color,
+                    on_release=lambda x: self.delete_rule(description,)
+                ),
+            ],
+        )
+        self.dialog.open()
+
+    def delete_rule(self, description):
+
+        sql = """DELETE FROM rules WHERE rname = ?"""
+        db.execute(sql, (description,))
+        mydb.commit()
+        close_button = MDFlatButton(
+            text='Close', on_release=self.close_dialog)
+        self.dialog = MDDialog(title='Delete', text='Rule has been deleted.',
+                               size_hint=(0.7, 1),
+                               buttons=[close_button])
+        self.dialog.open()
+        self.root.ids.ruleList.clear_widgets()
+        self.rule_list()
+        self.root.ids.screen_manager.current = 'MainScreen'
 
     def rule_on_click(self, uuid, x):
         ''' When a rule is clicked these fuctions will check rule status, enable or disable the rule,
