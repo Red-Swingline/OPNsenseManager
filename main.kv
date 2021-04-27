@@ -87,8 +87,7 @@ Screen:
                     icon: "arrow-left"
                     elevation_normal: 8
                     pos_hint: {"center_x": .5, "center_y": .5}
-                    on_release: 
-                        screen_manager.current = 'MainScreen'
+                    on_release: app.add_back_arrow_clicked()
                 Widget:
             Widget:
             
@@ -107,7 +106,7 @@ Screen:
                                     id:ruleList_delete
                 MDFloatingActionButton:
                     icon: "arrow-left"
-                    elevation_normal: 8
-                    pos_hint: {"center_x": .5, "center_y": .5}
+                    elevation_normal: 10
+                    pos_hint: {"center_x": .5, "center_y": .3}
                     on_release: 
                         screen_manager.current = 'MainScreen'

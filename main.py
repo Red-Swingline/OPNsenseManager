@@ -25,7 +25,6 @@ class MainApp(MDApp):
         cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
     reboot_opn = f'{cfg["host"]}:{cfg["port"]}/api/core/system/reboot/'
-    rules = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/searchRule'
     apply = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/apply'
     check_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/get'
     Start_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/set'
@@ -35,12 +34,14 @@ class MainApp(MDApp):
     secret = cfg["secret"]
 
     def on_start(self):
-        '''Runs all on start fuctions, database creation and queries, rule status checks whatever else needs to happen on start'''
-        self.rule_list()
-        self.delete_rule_list()
-        # self.rule_lookup() #used to quickly add rules to the local database will eventually be removed
+        '''Runs all on start fuctions, database creation and queries, rule status checks whatever else needs to 
+        happen on start'''
+        self.create_table()  # creates table if it doesn't exist'
+        self.rule_list()  # generates enable disable rule list on main screen.
+        self.delete_rule_list()  # Generates list of rules in SQlite table.
 
     def build(self):
+        '''Sets app theme color and loads the builder kv file'''
         self.theme_cls.primary_palette = 'BlueGray'
         self.screen = Builder.load_file("main.kv")
         return self.screen
@@ -51,6 +52,7 @@ class MainApp(MDApp):
         pass
 
     def create_table(self):
+        '''Creates SQlite table if it doesnt already exsist'''
         db.execute("""CREATE TABLE  IF NOT EXISTS rules(
         id integer PRIMARY KEY,
         rname TEXT,
@@ -58,43 +60,67 @@ class MainApp(MDApp):
         );""")
 
     def rule_query(self):
+        '''Querys the SQlite table to get stored list of rules to be managed from the app.'''
         db.execute('''SELECT * from rules''')
         self.rows = db.fetchall()
         return self.rows
 
-    #This is only here for quickly adding rules back to the local database.
-    def rule_lookup(self, *args):
-        check = requests.get(url=self.rules, auth=(
+    def url_request_get(self, url):
+        '''Handels all get request for checking status with firewall API'''
+        self.check = requests.get(url=url, auth=(
             self.key, self.secret), verify=False)
-        if check.status_code == 200:
-            check_rule = json.loads(check.text)
-        for r in check_rule['rows']:
-            name = r['description']
-            uuid = r['uuid']
-            try:
-                db.execute(f'''INSERT OR REPLACE INTO rules(
-                            rname, uuid) VALUES
-                            ('{name}', '{uuid}')''')
-            finally:
-                mydb.commit()
+        return self.check
+
+    def url_request_post(self, url):
+        '''Handels all get request for checking status with firewall API'''
+        self.check = requests.post(url=url, auth=(
+            self.key, self.secret), verify=False)
+        return self.check
+
+    def call_main_screen(self):
+        '''Switches to the main screen of the app'''
+        self.root.ids.screen_manager.current = 'MainScreen'
+
+    def add_back_arrow_clicked(self):
+        '''Clear text fields and change to main screen'''
+        self.root.ids.rule_description.text = ''
+        self.root.ids.rule_uuid.text = ''
+        self.call_main_screen()
 
     def add_rule_clicked(self, rule_description, rule_uuid):
-        try:
-            db.execute(f'''INSERT OR REPLACE INTO rules(
-                            rname, uuid) VALUES
-                            ('{rule_description}', '{rule_uuid}')''')
+        ''' When the add button is clicked on the add rule screen, it will insert text feild string into SQLite table.
+            Then clear the rulelist widgets, clear the text fields, rebuild the rule list and finally switch back to the 
+            main screen.'''
+        des = rule_description.rstrip()
+        rule = rule_uuid.strip()
+        if len(rule_description) > 0 and len(rule_uuid) > 0:
+            try:
+                db.execute(f'''INSERT OR REPLACE INTO rules(
+                                rname, uuid) VALUES
+                                ('{des}', '{rule}')''')
 
-        finally:
-            mydb.commit()
+            finally:
+                mydb.commit()
+                close_button = MDFlatButton(
+                    text='Close', on_release=self.close_dialog)
+                self.dialog = MDDialog(title='Rules', text='Rules have been added.',
+                                       size_hint=(0.7, 1),
+                                       buttons=[close_button])
+                self.dialog.open()
+                self.root.ids.ruleList.clear_widgets()
+                self.root.ids.rule_description.text = ''
+                self.root.ids.rule_uuid.text = ''
+                self.rule_list()
+                self.root.ids.ruleList_delete.clear_widgets()
+                self.delete_rule_list()
+                self.call_main_screen()
+        else:
             close_button = MDFlatButton(
                 text='Close', on_release=self.close_dialog)
-            self.dialog = MDDialog(title='Rules', text='Rules have been added.',
+            self.dialog = MDDialog(title='error', text='Missing input.',
                                    size_hint=(0.7, 1),
                                    buttons=[close_button])
             self.dialog.open()
-            self.root.ids.ruleList.clear_widgets()
-            self.rule_list()
-            self.root.ids.screen_manager.current = 'MainScreen'
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
@@ -107,11 +133,14 @@ class MainApp(MDApp):
                 on_release=lambda x: threading.Thread(
                     target=self.rule_on_click, args=(x.secondary_text, x), daemon=True).start()
             )
-            self.check = requests.get(url=self.rule, auth=(
-                self.key, self.secret), verify=False)
+            self.url_request_get(self.rule)
             if self.check.status_code == 200:
                 check_rule = json.loads(self.check.text)
-                if check_rule['rule']['enabled'] == '1':
+                if not 'rule' in check_rule or len(check_rule['rule']['enabled']) == 0:
+                    rules.add_widget(IconLeftWidget(
+                        icon='checkbox-blank-circle-outline'
+                    ))
+                elif check_rule['rule']['enabled'] == '1':
                     rules.add_widget(IconLeftWidget(
                         icon='checkbox-marked-circle-outline'
                     ))
@@ -163,7 +192,7 @@ class MainApp(MDApp):
         self.dialog.open()
         self.root.ids.ruleList.clear_widgets()
         self.rule_list()
-        self.root.ids.screen_manager.current = 'MainScreen'
+        self.call_main_screen()
 
     def rule_on_click(self, uuid, x):
         ''' When a rule is clicked these fuctions will check rule status, enable or disable the rule,
@@ -177,8 +206,7 @@ class MainApp(MDApp):
             and stuffs it into the rule string'''
         toggle = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/toggleRule/{uuid}'
         self.rule = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/getRule/{uuid}'
-        self.check = requests.get(url=self.rule, auth=(
-            self.key, self.secret), verify=False)
+        self.url_request_get(self.rule)
         if self.check.status_code == 200:
             check_rule = json.loads(self.check.text)
             if check_rule['rule']['enabled'] == '1':
@@ -193,11 +221,9 @@ class MainApp(MDApp):
         Then calls status message function to inform the user what happend
         '''
         self.r_url = r_url
-        r = requests.post(url=r_url, auth=(
-            self.key, self.secret), verify=False)
+        r = self.url_request_post(r_url)
         if r.status_code == 200:
-            r = requests.post(url=self.apply, auth=(
-                self.key, self.secret), verify=False)
+            r = self.url_request_post(self.apply)
             x.icon = new_icon
             self.status_message(r, r_url)
 
@@ -230,8 +256,7 @@ class MainApp(MDApp):
 
     def check_wg1(self):
         '''Checks current status of WG '''
-        check = requests.get(url=self.check_wg, auth=(
-            self.key, self.secret), verify=False)
+        check = self.url_request_get(self.check_wg)
         if check.status_code == 200:
             check_rule = json.loads(check.text)
             if check_rule['general']['enabled'] == '1':
@@ -247,17 +272,15 @@ class MainApp(MDApp):
             self.wg_change_state(data)
 
     def wg_change_state(self, data):
-        r = requests.post(url=self.Start_wg, auth=(
-            self.key, self.secret), verify=False, json=data)
+        '''Will either enable or disable wireguard VPN depending on current status provided by on_wg_active'''
+        r = self.url_request_post(self.Start_wg)
         if r.status_code == 200:
-            r = requests.post(url=self.save_wg, auth=(
-                self.key, self.secret), verify=False)
+            r = self.url_request_post(self.save_wg)
             self.status_message(r, str(data['general']['enabled']))
 
     def reboot(self):
         ''' Sends Reboot API call to firewall'''
-        r = requests.post(url=self.reboot_OPN, auth=(
-            self.key, self.secret), verify=False)
+        r = self.url_request_post(self.reboot_OPN)
         self.status_message(r, "reboot")
 
     def close_dialog(self, obj):
@@ -265,6 +288,7 @@ class MainApp(MDApp):
         self.dialog.dismiss()
 
     def support_email(self):
+        '''Sends a canned Email to Admin Email'''
         SMTPserver = self.cfg["email_host"]
         sender = self.cfg["From_email"]
         destination = [f'{self.cfg["To_email"]}']
