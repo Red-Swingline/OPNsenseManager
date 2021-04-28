@@ -1,6 +1,6 @@
 OPNsense firewall manager used to manage rules created with the firewall automation plugin. Intended to be built for android phones. 
 
-### ScreenshotsS
+### Screenshots
 <img src="screenshots/rules.jpg" width="30%"></img><img src="screenshots/vpn.jpg" width="30%"></img><img src="screenshots/power.jpg" width="30%"></img><img src="screenshots/admin.jpg" width="30%"></img><img src="screenshots/add_rule.jpg" width="30%"></img><img src="screenshots/delete.jpg" width="30%"></img>
 
 ### Todo
