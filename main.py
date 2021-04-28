@@ -197,10 +197,8 @@ class MainApp(MDApp):
 
     def rule_on_click(self, uuid, x):
         ''' When a rule is clicked these functions will check rule status, enable or disable the rule,
-            clear the list view and finally recreate it with the new rule status.'''
+            and update the rule icon'''
         self.rule_check(uuid, x)
-        self.root.ids.ruleList.clear_widgets()
-        self.rule_list()
 
     def rule_check(self, uuid, x):
         '''Should check to see if a rule from the list is enabled or not. It grabs the uuid from the list view click 
@@ -224,7 +222,7 @@ class MainApp(MDApp):
         r = self.url_request_post(r_url)
         if r.status_code == 200:
             r = self.url_request_post(self.apply)
-            x.icon = new_icon
+            x.children[0].children[0].icon = new_icon
             self.status_message(r, r_url)
 
     def status_message(self, r, r_url):

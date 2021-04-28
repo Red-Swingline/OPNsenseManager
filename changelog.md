@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2021-04-28
+### Changed
+- Changed rule_on_click to only update the list item icon instead of removing the list and regenerating.
+- Buildozer.spec updated to account for bug in KivyMD and python 3.9
+- Added sdl2_ttf==2.0.15 to buidlozer.spec file for a kivyMD error for icons not rendering correctly on android.
+- Floatlayout on delete rules screen, so the back button can float correctly above the list.
+- Centered text fields on add rules screen.
+
+### Removed
+- Clear widgets from rule_on_click, this was used to clear the widget list, before I understood how to change the widgets children. No longer needed.
+- rule_list from rule_on_click, this was used to generate a new list object with the new icon values by checking the firewall for each rule status. rule_list is only needed on first load and when adding or deleting rules.
+ 
 ## [0.0.1] - 2021-04-27
 ### Added
 - CHANGELOG file to better track changes.

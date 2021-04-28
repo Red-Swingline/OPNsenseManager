@@ -64,7 +64,7 @@ Screen:
                     elevation: 10
                 MDTextField:
                     id: rule_description
-                    pos_hint: {'center_x': .3, 'center_y': .5}
+                    pos_hint: {'center_x': .5, 'center_y': .5}
                     size_hint_x: .5
                     mode: "rectangle"
                     hint_text: "Enter Description"
@@ -72,7 +72,7 @@ Screen:
                     helper_text_mode: "on_focus"                   
                 MDTextField:
                     id: rule_uuid
-                    pos_hint: {'center_x': .3, 'center_y': .5}
+                    pos_hint: {'center_x': .5, 'center_y': .5}
                     size_hint_x: .5
                     mode: "rectangle"                           
                     hint_text: "Enter UUID"
@@ -80,20 +80,20 @@ Screen:
                     helper_text_mode: "on_focus"
                 MDRaisedButton:
                     text: "Submit"
-                    pos_hint: {'center_x': .3, 'center_y': .6}
+                    pos_hint: {'center_x': .5, 'center_y': .6}
                     elevation: 10
                     on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
                 MDFloatingActionButton:
                     icon: "arrow-left"
                     elevation_normal: 8
-                    pos_hint: {"center_x": .5, "center_y": .5}
+                    pos_hint: {"center_x": .7, "center_y": .5}
                     on_release: app.add_back_arrow_clicked()
                 Widget:
             Widget:
             
         Screen:
             name: "delete_rules"
-            MDBoxLayout:
+            FloatLayout:          
                 orientation: 'vertical'
                 ScrollView:
                     MDTabs:
