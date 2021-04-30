@@ -42,16 +42,11 @@ Screen:
                         MDRelativeLayout:
                             MDFillRoundFlatButton:
                                 pos_hint:{'center_x':.2,'center_y':.9}
-                                text: "Email Admin"
-                                on_release:
-                                    app.support_email()
-                            MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.5,'center_y':.9}
                                 text: "Add Rule"
                                 on_release:
                                     screen_manager.current = 'add_rules'
                             MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.5,'center_y':.7}
+                                pos_hint:{'center_x':.5,'center_y':.9}
                                 text: "Delete Rules"
                                 on_release:
                                     screen_manager.current = 'delete_rules'

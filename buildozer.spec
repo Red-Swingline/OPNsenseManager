@@ -7,7 +7,7 @@ title = OPNsense Manager
 package.name = OPNmng
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = org.slackers
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,yaml,db
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.0.2
+version = 0.0.3
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -46,7 +46,7 @@ requirements =  python3==3.8.6,hostpython3==3.8.6,kivy==2.0.0rc4,requests,pillow
 #garden_requirements =
 
 # (str) Presplash of the application
-#presplash.filename = %(source.dir)s/data/presplash.png
+#presplash.filename = %(source.dir)s/splash.png
 
 # (str) Icon of the application
 icon.filename = %(source.dir)s/icon.png
@@ -88,13 +88,13 @@ fullscreen = 0
 android.permissions = INTERNET
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 27
+#android.api = 30
 
 # (int) Minimum API your APK will support.
-#android.minapi = 21
+#android.minapi = 27
 
 # (int) Android SDK version to use
-android.sdk = 29
+#android.sdk = 29
 
 # (str) Android NDK version to use
 #android.ndk = 19b
