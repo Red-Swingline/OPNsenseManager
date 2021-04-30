@@ -4,12 +4,11 @@ from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
 from kivymd.uix.tab import MDTabsBase
 from kivymd.uix.dialog import MDDialog
-from smtplib import SMTP_SSL as SMTP
-from email.mime.text import MIMEText
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem
 from db import *
+import ssl
 import threading
 import requests
 import json
@@ -284,50 +283,6 @@ class MainApp(MDApp):
     def close_dialog(self, obj):
         '''Closes dialog boxes'''
         self.dialog.dismiss()
-
-    def support_email(self):
-        '''Sends a canned Email to Admin Email'''
-        SMTPserver = self.cfg["email_host"]
-        sender = self.cfg["From_email"]
-        destination = [f'{self.cfg["To_email"]}']
-        USERNAME = sender
-        PASSWORD = self.cfg["password"]
-
-        text_subtype = 'plain'
-
-        content = """\
-        I am having firewall issues please check it out for me.
-        """
-
-        subject = "Firewall Issues"
-
-        try:
-            msg = MIMEText(content, text_subtype)
-            msg['Subject'] = subject
-            msg['From'] = sender
-
-            conn = SMTP(SMTPserver)
-            conn.set_debuglevel(False)
-            conn.login(USERNAME, PASSWORD)
-            try:
-                conn.sendmail(sender, destination, msg.as_string())
-            finally:
-                conn.quit()
-                close_button = MDFlatButton(
-                    text='Close', on_release=self.close_dialog)
-                self.dialog = MDDialog(title='Email', text='You Sent an Email to admin',
-                                       size_hint=(0.7, 1),
-                                       buttons=[close_button])
-                self.dialog.open()
-
-        except:
-            close_button = MDFlatButton(
-                text='Close', on_release=self.close_dialog)
-            self.dialog = MDDialog(title='Error', text='There was an error when sending your email.',
-                                   size_hint=(0.7, 1),
-                                   buttons=[close_button])
-            self.dialog.open()
-
 
 if __name__ == '__main__':
     ma = MainApp()
