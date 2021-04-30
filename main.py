@@ -1,4 +1,3 @@
-from kivy.app import App
 from kivymd.app import MDApp
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
