@@ -18,3 +18,4 @@ OPNsense firewall manager used to manage rules created with the firewall automat
 - [ ] Speed up rule list generation on load.
 - [X] Update only selected rule icon when enabling/disabling vs. querying rebuilding the whole list
 - [ ] Fix dialog box not dismissing after delete rule. (You have to touch behind the rule to dismiss)
+- [ ] Add a table for an API key, Secret, and Firewall URL/IP

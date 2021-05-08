@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2021-5-8
+### Removed
+- Removed Email prameters from config.yaml
+
+### Changed
+- Added check_wg1() to on_start()
+
 ## [0.0.3] - 2021-04-30
 ### Removed
 - Email admin button from admin tab
