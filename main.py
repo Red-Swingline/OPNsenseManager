@@ -1,4 +1,3 @@
-from kivy.app import App
 from kivymd.app import MDApp
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
@@ -38,6 +37,7 @@ class MainApp(MDApp):
         self.create_table()  # creates table if it doesn't exist'
         self.rule_list()  # generates enable disable rule list on main screen.
         self.delete_rule_list()  # Generates list of rules in SQlite table.
+        self.check_wg1()
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
