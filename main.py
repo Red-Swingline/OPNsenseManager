@@ -58,6 +58,14 @@ class MainApp(MDApp):
         uuid TEXT NOT NULL UNIQUE
         );""")
 
+        db.execute("""CREATE TABLE  IF NOT EXISTS api_info(
+        id integer PRIMARY KEY,
+        api_key TEXT NOT NULL UNIQUE,
+        api_secret TEXT NOT NULL UNIQUE,
+        url TEXT NOT NULL UNIQUE,
+        port INTEGER
+        );""")
+
     def rule_query(self):
         '''Queries the SQLite table to get stored list of rules to be managed from the app.'''
         db.execute('''SELECT * from rules''')
@@ -115,12 +123,31 @@ class MainApp(MDApp):
                 self.delete_rule_list()
                 self.call_main_screen()
         else:
-            close_button = MDFlatButton(
-                text='Close', on_release=self.close_dialog)
-            self.dialog = MDDialog(title='error', text='Missing input.',
-                                   size_hint=(0.7, 1),
-                                   buttons=[close_button])
-            self.dialog.open()
+            self.missing_input()
+
+    def add_api_info(self, api_key, api_secret, api_url, url_port):
+        '''Inserts API Key, API Secret, API URL, URL Port to table '''
+        key = api_key.strip()
+        secret = api_secret.strip()
+        url = api_url.strip()
+        port = url_port.strip()
+        if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
+            try:
+                db.execute(f'''INSERT OR REPLACE INTO api_info(
+                                api_key, api_secret, url, port) VALUES
+                                ('{key}', '{secret}', '{url}', '{port}')''')
+            finally:
+                mydb.commit()
+                close_button = MDFlatButton(
+                    text='Close', on_release=self.close_dialog)
+                self.dialog = MDDialog(title='Rules', text='Rules have been added.',
+                                       size_hint=(0.7, 1),
+                                       buttons=[close_button])
+                self.dialog.open()
+                self.root.ids.rule_description.text = ''
+                self.root.ids.rule_uuid.text = ''
+        else:
+            self.missing_input()
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
@@ -251,6 +278,14 @@ class MainApp(MDApp):
                                    buttons=[close_button])
             self.dialog.open()
 
+    def missing_input(self):
+        close_button = MDFlatButton(
+            text='Close', on_release=self.close_dialog)
+        self.dialog = MDDialog(title='error', text='Missing input.',
+                               size_hint=(0.7, 1),
+                               buttons=[close_button])
+        self.dialog.open()
+
     def check_wg1(self):
         '''Checks current status of WG '''
         check = self.url_request_get(self.check_wg)
@@ -283,6 +318,7 @@ class MainApp(MDApp):
     def close_dialog(self, obj):
         '''Closes dialog boxes'''
         self.dialog.dismiss()
+
 
 if __name__ == '__main__':
     ma = MainApp()
