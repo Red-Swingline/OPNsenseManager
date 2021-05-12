@@ -1,4 +1,0 @@
-host: URL_HERE # Set the URL or IP address your firewall will recive the API request
-port: 443 #Set the port of the firewall
-key: KEY_HERE #API key generated under user management
-secret: SECRET_HERE #Secret generated with API Key
