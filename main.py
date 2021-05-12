@@ -11,7 +11,9 @@ import ssl
 import threading
 import requests
 import json
-import yaml
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class Tab(MDFloatLayout, MDTabsBase):
@@ -19,25 +21,67 @@ class Tab(MDFloatLayout, MDTabsBase):
 
 
 class MainApp(MDApp):
-    with open("config.yaml", "r") as ymlfile:
-        cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+    db.execute("""CREATE TABLE  IF NOT EXISTS rules(
+    id integer PRIMARY KEY,
+    rname TEXT,
+    uuid TEXT NOT NULL UNIQUE
+    );""")
 
-    reboot_opn = f'{cfg["host"]}:{cfg["port"]}/api/core/system/reboot/'
-    apply = f'{cfg["host"]}:{cfg["port"]}/api/firewall/filter/apply'
-    check_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/get'
-    Start_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/general/set'
-    save_wg = f'{cfg["host"]}:{cfg["port"]}/api/wireguard/service/reconfigure'
+    db.execute("""CREATE TABLE  IF NOT EXISTS api_info(
+    id integer PRIMARY KEY,
+    api_key TEXT NOT NULL UNIQUE,
+    api_secret TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL UNIQUE,
+    port INTEGER
+    );""")
 
-    key = cfg["key"]
-    secret = cfg["secret"]
+    db.execute('''SELECT * from api_info''')
+    api_info = db.fetchall()
+
+    if len(api_info) > 0:
+        url = api_info[0][3]
+        port = api_info[0][4]
+        key = api_info[0][1]
+        secret = api_info[0][2]
+    else:
+        url = ''
+        port = ''
+        key = ''
+        secret = ''
+
+    reboot_opn = f'{url}:{port}/api/core/system/reboot/'
+    apply = f'{url}:{port}/api/firewall/filter/apply'
+    check_wg = f'{url}:{port}/api/wireguard/general/get'
+    Start_wg = f'{url}:{port}/api/wireguard/general/set'
+    save_wg = f'{url}:{port}/api/wireguard/service/reconfigure'
+    url_check = f'{url}:{port}/api/core/menu/search'
 
     def on_start(self):
-        '''Runs all on start fuctions, database creation and queries, rule status checks whatever else needs to 
+        '''Runs all on start fuctions, database creation and queries, rule status checks whatever else needs to
         happen on start'''
-        self.create_table()  # creates table if it doesn't exist'
-        self.rule_list()  # generates enable disable rule list on main screen.
-        self.delete_rule_list()  # Generates list of rules in SQlite table.
-        self.check_wg1()
+
+        if len(self.api_info) > 0:
+
+            try:
+                self.check = requests.post(url=self.url_check, auth=(
+                    self.key, self.secret), verify=False)
+                if self.check.status_code == 200:
+
+                    # generates enable disable rule list on main screen.
+                    self.rule_list()
+                    # Generates list for selecting rules to delete from sqlite.
+                    self.delete_rule_list()
+                    # Checks current status of wireguard
+                    self.check_wg1()  
+            except requests.exceptions.RequestException as e:
+                close_button = MDFlatButton(
+                    text='Close', on_release=self.close_dialog)
+                self.dialog = MDDialog(title='Error', text='Error while connecting to Firewall, check API Info.',
+                                       size_hint=(0.7, 1),
+                                       buttons=[close_button])
+                self.dialog.open()
+                pass
+            self.set_api_info_text(self.api_info)
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
@@ -49,22 +93,6 @@ class MainApp(MDApp):
         self, instance_tabs, instance_tab, instance_tab_label, tab_text
     ):
         pass
-
-    def create_table(self):
-        '''Creates SQLite table if it doesn't already exist'''
-        db.execute("""CREATE TABLE  IF NOT EXISTS rules(
-        id integer PRIMARY KEY,
-        rname TEXT,
-        uuid TEXT NOT NULL UNIQUE
-        );""")
-
-        db.execute("""CREATE TABLE  IF NOT EXISTS api_info(
-        id integer PRIMARY KEY,
-        api_key TEXT NOT NULL UNIQUE,
-        api_secret TEXT NOT NULL UNIQUE,
-        url TEXT NOT NULL UNIQUE,
-        port INTEGER
-        );""")
 
     def rule_query(self):
         '''Queries the SQLite table to get stored list of rules to be managed from the app.'''
@@ -94,9 +122,17 @@ class MainApp(MDApp):
         self.root.ids.rule_uuid.text = ''
         self.call_main_screen()
 
+    def set_api_info_text(self, api_info):
+        '''Set API info in text feilds on the API info page'''
+        if len(self.api_info) > 0:
+            self.root.ids.api_key.text = f'{api_info[0][1]}'
+            self.root.ids.api_secret.text = f'{api_info[0][2]}'
+            self.root.ids.api_url.text = f'{api_info[0][3]}'
+            self.root.ids.url_port.text = f'{api_info[0][4]}'
+
     def add_rule_clicked(self, rule_description, rule_uuid):
         ''' When the add button is clicked on the add rule screen, it will insert text field string into SQLite table.
-            Then clear the rule list widgets, clear the text fields, rebuild the rule list and finally switch back to the 
+            Then clear the rule list widgets, clear the text fields, rebuild the rule list and finally switch back to the
             main screen.
             '''
         des = rule_description.rstrip()
@@ -131,21 +167,26 @@ class MainApp(MDApp):
         secret = api_secret.strip()
         url = api_url.strip()
         port = url_port.strip()
-        if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
-            try:
-                db.execute(f'''INSERT OR REPLACE INTO api_info(
-                                api_key, api_secret, url, port) VALUES
-                                ('{key}', '{secret}', '{url}', '{port}')''')
-            finally:
-                mydb.commit()
-                close_button = MDFlatButton(
-                    text='Close', on_release=self.close_dialog)
-                self.dialog = MDDialog(title='Rules', text='Rules have been added.',
-                                       size_hint=(0.7, 1),
-                                       buttons=[close_button])
-                self.dialog.open()
-                self.root.ids.rule_description.text = ''
-                self.root.ids.rule_uuid.text = ''
+        if len(self.api_info) == 0:
+            if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
+                try:
+                    db.execute(f'''INSERT INTO api_info(
+                                    api_key, api_secret, url, port) VALUES
+                                    ('{key}', '{secret}', '{url}', '{port}')''')
+                finally:
+                    mydb.commit()
+                    self.api_added_message()
+        elif len(self.api_info) == 1:
+
+            if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
+                try:
+                    db.execute(f'''UPDATE api_info SET api_key = '{key}',
+                    api_secret = '{secret}', url = '{url}', port = '{port}' WHERE id = 1; ''')
+
+                finally:
+                    mydb.commit()
+                    self.api_added_message()
+
         else:
             self.missing_input()
 
@@ -153,7 +194,7 @@ class MainApp(MDApp):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
         self.rule_query()
         for r in self.rows:
-            self.rule = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/getRule/{r[2]}'
+            self.rule = f'{self.url}:{self.port}/api/firewall/filter/getRule/{r[2]}'
             rules = TwoLineIconListItem(
                 text=r[1],
                 secondary_text=r[2],
@@ -175,7 +216,6 @@ class MainApp(MDApp):
                     rules.add_widget(IconLeftWidget(
                         icon='checkbox-blank-circle-outline'
                     ))
-
             self.root.ids.ruleList.add_widget(rules)
 
     def delete_rule_list(self):
@@ -191,6 +231,7 @@ class MainApp(MDApp):
             self.root.ids.ruleList_delete.add_widget(rules)
 
     def delete_rule_clicked(self, description):
+        '''Confirms user intends to delete rule from local database.'''
         self.dialog = MDDialog(
             text="Delete Rule?",
             buttons=[
@@ -227,10 +268,10 @@ class MainApp(MDApp):
         self.rule_check(uuid, x)
 
     def rule_check(self, uuid, x):
-        '''Should check to see if a rule from the list is enabled or not. It grabs the uuid from the list view click 
+        '''Should check to see if a rule from the list is enabled or not. It grabs the uuid from the list view click
             and stuffs it into the rule string'''
-        toggle = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/toggleRule/{uuid}'
-        self.rule = f'{self.cfg["host"]}:{self.cfg["port"]}/api/firewall/filter/getRule/{uuid}'
+        toggle = f'{self.url}:{self.port}/api/firewall/filter/toggleRule/{uuid}'
+        self.rule = f'{self.url}:{self.port}/api/firewall/filter/getRule/{uuid}'
         self.url_request_get(self.rule)
         if self.check.status_code == 200:
             check_rule = json.loads(self.check.text)
@@ -279,9 +320,27 @@ class MainApp(MDApp):
             self.dialog.open()
 
     def missing_input(self):
+        '''Warning message that the user is missing a text feild'''
         close_button = MDFlatButton(
             text='Close', on_release=self.close_dialog)
         self.dialog = MDDialog(title='error', text='Missing input.',
+                               size_hint=(0.7, 1),
+                               buttons=[close_button])
+        self.dialog.open()
+
+    def api_added_message(self):
+        '''Message that is displayed when either API info is inserted into the local SQLite table or API info has been updated'''
+        close_button = MDFlatButton(
+            text='Close', on_release=self.close_dialog)
+        self.dialog = MDDialog(title='Info', text='API info has been saved.',
+                               size_hint=(0.7, 1),
+                               buttons=[close_button])
+        self.dialog.open()
+
+    def error_while_connecting(self):
+        close_button = MDFlatButton(
+            text='Close', on_release=self.close_dialog)
+        self.dialog = MDDialog(title='Error', text='Error while connecting to Firewall, check URL in API Info.',
                                size_hint=(0.7, 1),
                                buttons=[close_button])
         self.dialog.open()

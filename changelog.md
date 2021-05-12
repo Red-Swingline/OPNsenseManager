@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2021-5-12
+### Removed
+- Removed config Yaml file, this is no longer needed.
+
+### Changed
+- Moved table creation from on start to main app, because API info is stored in SQLite table it the query to get the API info on load would cause the table to not get created on first run of app.
+- silenced urllib3 warnings about insecure connection
+- changes API info variables to use query results from api_info table.
+
+### Added
+- Added a table called api_info 
+- Added a function to set api info to text fields on the add api info admin screen
+- Added check to on start to for api_info table to see if info is already stored.
+- Added check to on start to see if can connect to Firewall 
+- Added error message to on start for connection issues.
+ 
+
 ## [0.0.4] - 2021-5-8
 ### Removed
 - Removed Email prameters from config.yaml
