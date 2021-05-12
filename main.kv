@@ -50,6 +50,11 @@ Screen:
                                 text: "Delete Rules"
                                 on_release:
                                     screen_manager.current = 'delete_rules'
+                            MDFillRoundFlatButton:
+                                pos_hint:{'center_x':.2,'center_y':.8}
+                                text: "API Info"
+                                on_release:
+                                    screen_manager.current = 'add_api_info'
         Screen:
             name: "add_rules"
             MDBoxLayout:
@@ -85,7 +90,59 @@ Screen:
                     on_release: app.add_back_arrow_clicked()
                 Widget:
             Widget:
-            
+
+        Screen:
+            name: "add_api_info"
+            MDBoxLayout:
+                orientation: 'vertical'
+                MDToolbar:
+                    title: "Add API Info"
+                    elevation: 10
+                MDTextField:
+                    id: api_key
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"
+                    hint_text: "Enter API key"
+                    helper_text: "API Key"
+                    helper_text_mode: "on_focus"                   
+                MDTextField:
+                    id: api_secret
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"                           
+                    hint_text: "Enter API secret"
+                    helper_text: "Secret"
+                    helper_text_mode: "on_focus"
+                MDTextField:
+                    id: api_url
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"                           
+                    hint_text: "Enter URL or IP"
+                    helper_text: "URL/IP"
+                    helper_text_mode: "on_focus"
+                MDTextField:
+                    id: url_port
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    size_hint_x: .5
+                    mode: "rectangle"                           
+                    hint_text: "Enter Port Number"
+                    helper_text: "Port"
+                    helper_text_mode: "on_focus"
+                MDRaisedButton:
+                    text: "Submit"
+                    pos_hint: {'center_x': .5, 'center_y': .6}
+                    elevation: 10
+                    on_press: app.add_api_info(api_key.text, api_secret.text, api_url.text, url_port.text)
+                MDFloatingActionButton:
+                    icon: "arrow-left"
+                    elevation_normal: 8
+                    pos_hint: {"center_x": .7, "center_y": .5}
+                    on_release: app.add_back_arrow_clicked()
+                Widget:
+            Widget:
+
         Screen:
             name: "delete_rules"
             FloatLayout:          
