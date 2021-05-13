@@ -8,11 +8,7 @@ OPNsense firewall manager used to manage rules created with the firewall automat
         - $ buildozer android debug deploy run logcat
 
 ### Screenshots
-<<<<<<< HEAD
 <img src="screenshots/menu.jpg" width="30%"></img<img src="screenshots/rules.jpg" width="30%"></img><img src="screenshots/vpn.jpg" width="30%"></img><img src="screenshots/power.jpg" width="30%"></img><img src="screenshots/api_info.jpg" width="30%"></img><img src="screenshots/add_rule.jpg" width="30%"></img><img src="screenshots/delete.jpg" width="30%"></img><img src="screenshots/splash_screen.jpg" width="30%"></img>
-=======
-<img src="screenshots/rules.jpg" width="30%"></img><img src="screenshots/vpn.jpg" width="30%"></img><img src="screenshots/power.jpg" width="30%"></img><img src="screenshots/admin.jpg" width="30%"></img><img src="screenshots/api_info.jpg" width="30%"></img><img src="screenshots/add_rule.jpg" width="30%"></img><img src="screenshots/delete.jpg" width="30%"></img>
->>>>>>> main
 
 ### Todo
 - [X] Add ability to delete rules from the main list.
