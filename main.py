@@ -72,14 +72,10 @@ class MainApp(MDApp):
                     # Generates list for selecting rules to delete from sqlite.
                     self.delete_rule_list()
                     # Checks current status of wireguard
-                    self.check_wg1()  
+                    self.check_wg1()
             except requests.exceptions.RequestException as e:
-                close_button = MDFlatButton(
-                    text='Close', on_release=self.close_dialog)
-                self.dialog = MDDialog(title='Error', text='Error while connecting to Firewall, check API Info.',
-                                       size_hint=(0.7, 1),
-                                       buttons=[close_button])
-                self.dialog.open()
+                self.message_output(
+                    'Error', 'Error while connecting to Firewall, check URL in API Info.')
                 pass
             self.set_api_info_text(self.api_info)
 
@@ -159,7 +155,7 @@ class MainApp(MDApp):
                 self.delete_rule_list()
                 self.call_main_screen()
         else:
-            self.missing_input()
+            self.message_output('Error', 'Missing input.')
 
     def add_api_info(self, api_key, api_secret, api_url, url_port):
         '''Inserts API Key, API Secret, API URL, URL Port to table '''
@@ -175,7 +171,7 @@ class MainApp(MDApp):
                                     ('{key}', '{secret}', '{url}', '{port}')''')
                 finally:
                     mydb.commit()
-                    self.api_added_message()
+                    self.message_output('Info', 'API info has been saved.')
         elif len(self.api_info) == 1:
 
             if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
@@ -185,10 +181,10 @@ class MainApp(MDApp):
 
                 finally:
                     mydb.commit()
-                    self.api_added_message()
+                    self.message_output('Info', 'API info has been saved.')
 
         else:
-            self.missing_input()
+            self.message_output('Error', 'Missing input.')
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
@@ -277,12 +273,14 @@ class MainApp(MDApp):
             check_rule = json.loads(self.check.text)
             if check_rule['rule']['enabled'] == '1':
                 new_icon = 'checkbox-blank-circle-outline'
-                self.rule_state_change(f'{toggle}/0', new_icon, x)
+                message = 'Rule has been disabled.'
+                self.rule_state_change(f'{toggle}/0', new_icon, x, message)
             else:
                 new_icon = 'checkbox-marked-circle-outline'
-                self.rule_state_change(f'{toggle}/1', new_icon, x)
+                message = 'Rule has been enabled.'
+                self.rule_state_change(f'{toggle}/1', new_icon, x, message)
 
-    def rule_state_change(self, r_url, new_icon, x):
+    def rule_state_change(self, r_url, new_icon, x, message):
         '''Either enables or disables the selected rules based on current status of the rule in the firewall.
             Then calls status message function to inform the user what happens'''
         self.r_url = r_url
@@ -290,57 +288,15 @@ class MainApp(MDApp):
         if r.status_code == 200:
             r = self.url_request_post(self.apply)
             x.children[0].children[0].icon = new_icon
-            self.status_message(r, r_url)
-
-    def status_message(self, r, r_url):
-        '''Creates a dialog box to notify user rule is enabled'''
-        if r.status_code == 200:
-            if "/1" in r_url:
-                status_text = 'Rule has been enabled'
-            elif "/0" in r_url:
-                status_text = 'Rule has been disabled'
-            elif "1" in r_url:
-                status_text = 'VPN On!'
-            elif "0" in r_url:
-                status_text = 'VPN Off!'
-            elif "reboot" in r_url:
-                status_text = 'Rebooting Please wait'
-            close_button = MDFlatButton(
-                text='Close', on_release=self.close_dialog)
-            self.dialog = MDDialog(title='Complete', text=status_text,
-                                   size_hint=(0.7, 1),
-                                   buttons=[close_button])
-            self.dialog.open()
+            self.message_output('Complete', message)
         else:
-            close_button = MDFlatButton(
-                text='Close', on_release=self.close_dialog)
-            self.dialog = MDDialog(title='Error', text='An error has occured.',
-                                   size_hint=(0.7, 1),
-                                   buttons=[close_button])
-            self.dialog.open()
+            self.message_output('Error', 'An error has occured.')
 
-    def missing_input(self):
-        '''Warning message that the user is missing a text feild'''
+    def message_output(self, title, message):
+        '''Creates a popup message to the user when required'''
         close_button = MDFlatButton(
             text='Close', on_release=self.close_dialog)
-        self.dialog = MDDialog(title='error', text='Missing input.',
-                               size_hint=(0.7, 1),
-                               buttons=[close_button])
-        self.dialog.open()
-
-    def api_added_message(self):
-        '''Message that is displayed when either API info is inserted into the local SQLite table or API info has been updated'''
-        close_button = MDFlatButton(
-            text='Close', on_release=self.close_dialog)
-        self.dialog = MDDialog(title='Info', text='API info has been saved.',
-                               size_hint=(0.7, 1),
-                               buttons=[close_button])
-        self.dialog.open()
-
-    def error_while_connecting(self):
-        close_button = MDFlatButton(
-            text='Close', on_release=self.close_dialog)
-        self.dialog = MDDialog(title='Error', text='Error while connecting to Firewall, check URL in API Info.',
+        self.dialog = MDDialog(title=f'{title}', text=f'{message}',
                                size_hint=(0.7, 1),
                                buttons=[close_button])
         self.dialog.open()
@@ -367,12 +323,17 @@ class MainApp(MDApp):
         r = self.url_request_post(self.Start_wg)
         if r.status_code == 200:
             r = self.url_request_post(self.save_wg)
-            self.status_message(r, str(data['general']['enabled']))
+            self.message_output('Complete', 'VPN On!')
+        else:
+            self.message_output('Error', 'An error has occured.')
 
     def reboot(self):
         '''Sends Reboot API call to firewall'''
         r = self.url_request_post(self.reboot_OPN)
-        self.status_message(r, "reboot")
+        if r.status_code == 200:
+            self.message_output('Reboot', "Rebooting please wait.")
+        else:
+            self.message_output('Error', 'An error has occured.')
 
     def close_dialog(self, obj):
         '''Closes dialog boxes'''
