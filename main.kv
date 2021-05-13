@@ -11,7 +11,6 @@ Screen:
                         title: "Rule List"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
                     MDBoxLayout:
                         orientation: 'vertical'
                         padding: "10dp"
@@ -26,7 +25,7 @@ Screen:
                         title: "Add Rule"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
                     MDTextField:
                         id: rule_description
                         pos_hint: {'center_x': .5, 'center_y': .5}
@@ -58,16 +57,31 @@ Screen:
                         title: "VPN"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
                     MDRelativeLayout:
                         MDLabel:
-                            text: "VPN ON/OFF"
+                            text: "Wireguard VPN ON/OFF"
                             bold: True
                             pos_hint:{'center_x':.6,'center_y':.9}
                         MDSwitch:
                             id: wg_switch
-                            pos_hint: {'center_x': .5, 'center_y': .9}
+                            pos_hint: {'center_x': .8, 'center_y': .9}
                             on_press: app.on_wg_active(*args)
+            Screen:
+                name: 'power'
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDToolbar:
+                        title: "Power"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
+                    MDRelativeLayout
+                        MDFillRoundFlatButton:
+                            pos_hint:{'center_x':.2,'center_y':.9}
+                            text: "Reboot"
+                            on_release:
+                                app.reboot()
             Screen:
                 name:"delete_rules"
                 MDBoxLayout:
@@ -77,7 +91,7 @@ Screen:
                         title: "Delete Rules"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
                     MDBoxLayout:
                         orientation: 'vertical'
                         padding: "10dp"
@@ -93,39 +107,27 @@ Screen:
                         title: "Add API Info"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
                     MDTextField:
                         id: api_key
                         pos_hint: {'center_x': .5, 'center_y': .5}
                         size_hint_x: .9
-                        mode: "rectangle"
-                        hint_text: "Enter API key"
-                        helper_text: "API Key"
-                        helper_text_mode: "on_focus"                   
+                        hint_text: "Enter API key"                  
                     MDTextField:
                         id: api_secret
                         pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9
-                        mode: "rectangle"                           
+                        size_hint_x: .9                          
                         hint_text: "Enter API secret"
-                        helper_text: "Secret"
-                        helper_text_mode: "on_focus"
                     MDTextField:
                         id: api_url
                         pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9
-                        mode: "rectangle"                           
+                        size_hint_x: .9                         
                         hint_text: "Enter URL or IP"
-                        helper_text: "URL/IP"
-                        helper_text_mode: "on_focus"
                     MDTextField:
                         id: url_port
                         pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9
-                        mode: "rectangle"                           
+                        size_hint_x: .9                          
                         hint_text: "Enter Port Number"
-                        helper_text: "Port"
-                        helper_text_mode: "on_focus"
                     MDRaisedButton:
                         text: "Submit"
                         pos_hint: {'center_x': .7, 'center_y': .7}
@@ -139,7 +141,7 @@ Screen:
             BoxLayout:
                 orientation: 'vertical'
                 Image: 
-                    source: 'logo.png'
+                    source: 'images/logo.png'
                     elevation_normal: 8
                 ScrollView:
                     MDList:
@@ -156,7 +158,14 @@ Screen:
                                 nav_drawer.set_state("close")
                                 screen_manager.current = 'vpn'
                             IconLeftWidget:
-                                icon: "vpn"                       
+                                icon: "vpn"  
+                        OneLineAvatarIconListItem:
+                            text: 'Power'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'power'
+                            IconLeftWidget:
+                                icon: "power"                         
                         OneLineAvatarIconListItem:
                             text: 'Add Rules'
                             on_press: 
