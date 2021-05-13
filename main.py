@@ -13,7 +13,10 @@ import requests
 import json
 import urllib3
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -64,10 +67,16 @@ class MainApp(MDApp):
         if len(self.api_info) > 0:
 
             try:
+<<<<<<< HEAD
                 self.check = requests.post(url=self.url_check, timeout=5, auth=(
                     self.key, self.secret), verify=False)
                 if self.check.status_code == 200:
                     print(self.check)
+=======
+                self.check = requests.post(url=self.url_check, auth=(
+                    self.key, self.secret), verify=False)
+                if self.check.status_code == 200:
+>>>>>>> main
 
                     # generates enable disable rule list on main screen.
                     self.rule_list()
@@ -75,7 +84,11 @@ class MainApp(MDApp):
                     self.delete_rule_list()
                     # Checks current status of wireguard
                     self.check_wg1()
+<<<<<<< HEAD
             except requests.exceptions.Timeout:
+=======
+            except requests.exceptions.RequestException as e:
+>>>>>>> main
                 self.message_output(
                     'Error', 'Error while connecting to Firewall, check URL in API Info.')
                 pass
@@ -181,9 +194,12 @@ class MainApp(MDApp):
                 finally:
                     mydb.commit()
                     self.message_output('Info', 'API info has been saved.')
+<<<<<<< HEAD
             else:
                 self.message_output('Error', 'Missing Input.')
 
+=======
+>>>>>>> main
         elif len(self.api_info) == 1:
 
             if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
@@ -194,8 +210,11 @@ class MainApp(MDApp):
                 finally:
                     mydb.commit()
                     self.message_output('Info', 'API info has been saved.')
+<<<<<<< HEAD
             else:
                 self.message_output('Error', 'Missing Input.')
+=======
+>>>>>>> main
 
         else:
             self.message_output('Error', 'Missing input.')
