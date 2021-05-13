@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+## [1.0.0] - 2021-5-13
+### Changed 
+- New layout
+- New logo, remove the opnsense logo in case someone gets mad.
+
+
+=======
+>>>>>>> main
 ## [0.0.5] - 2021-5-12
 ### Removed
 - Removed config Yaml file, this is no longer needed.

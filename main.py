@@ -13,6 +13,10 @@ import requests
 import json
 import urllib3
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> main
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -63,9 +67,16 @@ class MainApp(MDApp):
         if len(self.api_info) > 0:
 
             try:
+<<<<<<< HEAD
+                self.check = requests.post(url=self.url_check, timeout=5, auth=(
+                    self.key, self.secret), verify=False)
+                if self.check.status_code == 200:
+                    print(self.check)
+=======
                 self.check = requests.post(url=self.url_check, auth=(
                     self.key, self.secret), verify=False)
                 if self.check.status_code == 200:
+>>>>>>> main
 
                     # generates enable disable rule list on main screen.
                     self.rule_list()
@@ -73,7 +84,11 @@ class MainApp(MDApp):
                     self.delete_rule_list()
                     # Checks current status of wireguard
                     self.check_wg1()
+<<<<<<< HEAD
+            except requests.exceptions.Timeout:
+=======
             except requests.exceptions.RequestException as e:
+>>>>>>> main
                 self.message_output(
                     'Error', 'Error while connecting to Firewall, check URL in API Info.')
                 pass
@@ -81,8 +96,9 @@ class MainApp(MDApp):
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
-        self.theme_cls.primary_palette = 'BlueGray'
+        self.theme_cls.primary_palette = 'Amber'
         self.screen = Builder.load_file("main.kv")
+
         return self.screen
 
     def on_tab_switch(
@@ -110,7 +126,17 @@ class MainApp(MDApp):
 
     def call_main_screen(self):
         '''Switches to the main screen of the app.'''
-        self.root.ids.screen_manager.current = 'MainScreen'
+        self.root.ids.screen_manager.current = 'rules'
+
+    def previous_screen(self):
+        screen = self.root.ids.screen_manager.current
+        self.root.ids.screen_manager.direction = 'left'
+        if screen == 'add_rules':
+            self.root.ids.rule_description.text = ''
+            self.root.ids.rule_uuid.text = ''
+            self.root.ids.screen_manager.current = 'rules'
+        else:
+            self.root.ids.screen_manager.current = 'rules'
 
     def add_back_arrow_clicked(self):
         '''Clear text fields and change to main screen'''
@@ -141,11 +167,7 @@ class MainApp(MDApp):
 
             finally:
                 mydb.commit()
-                close_button = MDFlatButton(
-                    text='Close', on_release=self.close_dialog)
-                self.dialog = MDDialog(title='Rules', text='Rules have been added.',
-                                       size_hint=(0.7, 1),
-                                       buttons=[close_button])
+                self.message_output('Rules', "Rules have been added.")
                 self.dialog.open()
                 self.root.ids.ruleList.clear_widgets()
                 self.root.ids.rule_description.text = ''
@@ -172,6 +194,12 @@ class MainApp(MDApp):
                 finally:
                     mydb.commit()
                     self.message_output('Info', 'API info has been saved.')
+<<<<<<< HEAD
+            else:
+                self.message_output('Error', 'Missing Input.')
+
+=======
+>>>>>>> main
         elif len(self.api_info) == 1:
 
             if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
@@ -182,6 +210,11 @@ class MainApp(MDApp):
                 finally:
                     mydb.commit()
                     self.message_output('Info', 'API info has been saved.')
+<<<<<<< HEAD
+            else:
+                self.message_output('Error', 'Missing Input.')
+=======
+>>>>>>> main
 
         else:
             self.message_output('Error', 'Missing input.')
