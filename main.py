@@ -81,8 +81,9 @@ class MainApp(MDApp):
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
-        self.theme_cls.primary_palette = 'BlueGray'
+        self.theme_cls.primary_palette = 'Amber'
         self.screen = Builder.load_file("main.kv")
+
         return self.screen
 
     def on_tab_switch(
@@ -110,7 +111,7 @@ class MainApp(MDApp):
 
     def call_main_screen(self):
         '''Switches to the main screen of the app.'''
-        self.root.ids.screen_manager.current = 'MainScreen'
+        self.root.ids.screen_manager.current = 'rules'
 
     def add_back_arrow_clicked(self):
         '''Clear text fields and change to main screen'''

@@ -1,164 +1,180 @@
 Screen:
-    ScreenManager:
-        id: screen_manager    
-        Screen:
-            name: "MainScreen"
-            MDBoxLayout:
-                id:tabs
-                orientation: "vertical"
-                MDToolbar:
-                    title: "OPNsense Manager"
-                    elevation: 10
-                MDTabs:
-                    id: tabs
-                    on_tab_switch: app.on_tab_switch(*args)
-                    Tab:
-                        title:"Rules"
+    MDNavigationLayout:
+        ScreenManager:
+            id: screen_manager
+            Screen:
+                name:"rules"
+                MDBoxLayout:
+                    id: rule_list
+                    orientation: 'vertical'                   
+                    MDToolbar:
+                        title: "Rule List"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        padding: "10dp"
                         ScrollView:
                             MDList:
-                                id:ruleList
-                    Tab:
-                        text:"VPN"
-                        MDRelativeLayout:
-                            MDLabel:
-                                text: "VPN ON/OFF"
-                                bold: True
-                                pos_hint:{'center_x':.6,'center_y':.9}
-                            MDSwitch:
-                                id: wg_switch
-                                pos_hint: {'center_x': .5, 'center_y': .9}
-                                on_press: app.on_wg_active(*args)
-                    Tab:
-                        text:"Power"
-                        bold: True
-                        MDRelativeLayout:
-                            MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.2,'center_y':.9}
-                                text: "Reboot"
-                                on_release:
-                                    app.print_children()
-                    Tab:
-                        text:"Admin"
-                        MDRelativeLayout:
-                            MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.2,'center_y':.9}
-                                text: "Add Rule"
-                                on_release:
-                                    screen_manager.current = 'add_rules'
-                            MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.5,'center_y':.9}
-                                text: "Delete Rules"
-                                on_release:
-                                    screen_manager.current = 'delete_rules'
-                            MDFillRoundFlatButton:
-                                pos_hint:{'center_x':.2,'center_y':.8}
-                                text: "API Info"
-                                on_release:
-                                    screen_manager.current = 'add_api_info'
-        Screen:
-            name: "add_rules"
-            MDBoxLayout:
-                orientation: 'vertical'
-                MDToolbar:
-                    title: "Add Rule"
-                    elevation: 10
-                MDTextField:
-                    id: rule_description
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"
-                    hint_text: "Enter Description"
-                    helper_text: "Description"
-                    helper_text_mode: "on_focus"                   
-                MDTextField:
-                    id: rule_uuid
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"                           
-                    hint_text: "Enter UUID"
-                    helper_text: "UUID"
-                    helper_text_mode: "on_focus"
-                MDRaisedButton:
-                    text: "Submit"
-                    pos_hint: {'center_x': .5, 'center_y': .6}
-                    elevation: 10
-                    on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
-                MDFloatingActionButton:
-                    icon: "arrow-left"
-                    elevation_normal: 8
-                    pos_hint: {"center_x": .7, "center_y": .5}
-                    on_release: app.add_back_arrow_clicked()
+                                id: ruleList
+            Screen:
+                name: "add_rules"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDToolbar:
+                        title: "Add Rule"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                    MDTextField:
+                        id: rule_description
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .5
+                        mode: "rectangle"
+                        hint_text: "Enter Description"
+                        helper_text: "Description"
+                        helper_text_mode: "on_focus"                   
+                    MDTextField:
+                        id: rule_uuid
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .5
+                        mode: "rectangle"                           
+                        hint_text: "Enter UUID"
+                        helper_text: "UUID"
+                        helper_text_mode: "on_focus"
+                    MDRaisedButton:
+                        text: "Submit"
+                        pos_hint: {'center_x': .7, 'center_y': .5}
+                        elevation: 10
+                        on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
+                    Widget:
                 Widget:
-            Widget:
-
-        Screen:
-            name: "add_api_info"
-            MDBoxLayout:
-                orientation: 'vertical'
-                MDToolbar:
-                    title: "Add API Info"
-                    elevation: 10
-                MDTextField:
-                    id: api_key
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"
-                    hint_text: "Enter API key"
-                    helper_text: "API Key"
-                    helper_text_mode: "on_focus"                   
-                MDTextField:
-                    id: api_secret
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"                           
-                    hint_text: "Enter API secret"
-                    helper_text: "Secret"
-                    helper_text_mode: "on_focus"
-                MDTextField:
-                    id: api_url
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"                           
-                    hint_text: "Enter URL or IP"
-                    helper_text: "URL/IP"
-                    helper_text_mode: "on_focus"
-                MDTextField:
-                    id: url_port
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint_x: .5
-                    mode: "rectangle"                           
-                    hint_text: "Enter Port Number"
-                    helper_text: "Port"
-                    helper_text_mode: "on_focus"
-                MDRaisedButton:
-                    text: "Submit"
-                    pos_hint: {'center_x': .5, 'center_y': .6}
-                    elevation: 10
-                    on_press: app.add_api_info(api_key.text, api_secret.text, api_url.text, url_port.text)
-                MDFloatingActionButton:
-                    icon: "arrow-left"
-                    elevation_normal: 8
-                    pos_hint: {"center_x": .7, "center_y": .5}
-                    on_release: app.add_back_arrow_clicked()
+            Screen:
+                name: "vpn"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDToolbar:
+                        title: "VPN"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                    MDRelativeLayout:
+                        MDLabel:
+                            text: "VPN ON/OFF"
+                            bold: True
+                            pos_hint:{'center_x':.6,'center_y':.9}
+                        MDSwitch:
+                            id: wg_switch
+                            pos_hint: {'center_x': .5, 'center_y': .9}
+                            on_press: app.on_wg_active(*args)
+            Screen:
+                name:"delete_rules"
+                MDBoxLayout:
+                    id: rule_list
+                    orientation: 'vertical'                   
+                    MDToolbar:
+                        title: "Delete Rules"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        padding: "10dp"
+                        ScrollView:
+                            MDList:
+                                id: ruleList_delete
+              
+            Screen:
+                name: "add_api_info"
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDToolbar:
+                        title: "Add API Info"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: screen_manager.previous()]]
+                    MDTextField:
+                        id: api_key
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .9
+                        mode: "rectangle"
+                        hint_text: "Enter API key"
+                        helper_text: "API Key"
+                        helper_text_mode: "on_focus"                   
+                    MDTextField:
+                        id: api_secret
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .9
+                        mode: "rectangle"                           
+                        hint_text: "Enter API secret"
+                        helper_text: "Secret"
+                        helper_text_mode: "on_focus"
+                    MDTextField:
+                        id: api_url
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .9
+                        mode: "rectangle"                           
+                        hint_text: "Enter URL or IP"
+                        helper_text: "URL/IP"
+                        helper_text_mode: "on_focus"
+                    MDTextField:
+                        id: url_port
+                        pos_hint: {'center_x': .5, 'center_y': .5}
+                        size_hint_x: .9
+                        mode: "rectangle"                           
+                        hint_text: "Enter Port Number"
+                        helper_text: "Port"
+                        helper_text_mode: "on_focus"
+                    MDRaisedButton:
+                        text: "Submit"
+                        pos_hint: {'center_x': .7, 'center_y': .7}
+                        elevation: 10
+                        on_press: app.add_api_info(api_key.text, api_secret.text, api_url.text, url_port.text)
+                    Widget:
                 Widget:
-            Widget:
 
-        Screen:
-            name: "delete_rules"
-            FloatLayout:          
+        MDNavigationDrawer:
+            id: nav_drawer
+            BoxLayout:
                 orientation: 'vertical'
+                Image: 
+                    source: 'logo.png'
+                    elevation_normal: 8
                 ScrollView:
-                    MDTabs:
-                        id: tabs
-                        on_tab_switch: app.on_tab_switch(*args)
-                        Tab:
-                            title:"Delete"
-                            ScrollView:
-                                MDList:
-                                    id:ruleList_delete
-                MDFloatingActionButton:
-                    icon: "arrow-left"
-                    elevation_normal: 10
-                    pos_hint: {"center_x": .5, "center_y": .3}
-                    on_release: 
-                        screen_manager.current = 'MainScreen'
+                    MDList:
+                        OneLineAvatarIconListItem:
+                            text: 'Rule List'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'rules'
+                            IconLeftWidget:
+                                icon: "clipboard-list-outline"
+                        OneLineAvatarIconListItem:
+                            text: 'VPN'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'vpn'
+                            IconLeftWidget:
+                                icon: "vpn"                       
+                        OneLineAvatarIconListItem:
+                            text: 'Add Rules'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'add_rules'
+                            IconLeftWidget:
+                                icon: "database-plus" 
+                        OneLineAvatarIconListItem:
+                            text: 'API Info'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'add_api_info'
+                            IconLeftWidget:
+                                icon: "api"                        
+                        OneLineAvatarIconListItem:
+                            text: 'Delete Rules'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'delete_rules'
+                            IconLeftWidget:
+                                icon: "delete"
