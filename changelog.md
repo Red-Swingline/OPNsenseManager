@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2021-5-14
+
+
+
 ## [1.0.0] - 2021-5-13
+### Changed
 - New Layout
 - New Logo
 
