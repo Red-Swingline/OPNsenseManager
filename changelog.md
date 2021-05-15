@@ -6,9 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2021-5-15
+### Changged
+- Refactored on_wg_active
+- Fixed wg_change_state to include json payload
+
+### Removed
+- All old tabs referances, leftover from old layout.
+
 ## [1.0.1] - 2021-5-14
+### Added
+- Added Error Handling for requests, things like clicking buttons before setting URL in API info. HTTP timeout errors, improper formatting of URL, improper API info.
 
-
+### Changed
+- Docstrings updated in all functions, also fixed typos.
 
 ## [1.0.0] - 2021-5-13
 ### Changed

@@ -1,7 +1,6 @@
 from kivymd.app import MDApp
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
-from kivymd.uix.tab import MDTabsBase
 from kivymd.uix.dialog import MDDialog
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -15,10 +14,6 @@ import urllib3
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-class Tab(MDFloatLayout, MDTabsBase):
-    '''Class implementing content for a tab.'''
 
 
 class MainApp(MDApp):
@@ -53,7 +48,7 @@ class MainApp(MDApp):
     reboot_opn = f'{url}:{port}/api/core/system/reboot/'
     apply = f'{url}:{port}/api/firewall/filter/apply'
     check_wg = f'{url}:{port}/api/wireguard/general/get'
-    Start_wg = f'{url}:{port}/api/wireguard/general/set'
+    start_wg = f'{url}:{port}/api/wireguard/general/set'
     save_wg = f'{url}:{port}/api/wireguard/service/reconfigure'
     url_check = f'{url}:{port}/api/core/menu/search'
 
@@ -76,11 +71,6 @@ class MainApp(MDApp):
 
         return self.screen
 
-    def on_tab_switch(
-        self, instance_tabs, instance_tab, instance_tab_label, tab_text
-    ):
-        pass
-
     def rule_query(self):
         '''Queries the SQLite table to get stored list of rules to be managed from the app.'''
         db.execute('''SELECT * from rules''')
@@ -95,7 +85,7 @@ class MainApp(MDApp):
 
     def url_request_post(self, url):
         '''Handles all post request for checking status with firewall API.'''
-        self.check = requests.post(url=url, timeout=5, auth=(
+        self.check = requests.post(url=url, timeout=10, auth=(
             self.key, self.secret), verify=False)
         return self.check
 
@@ -389,22 +379,39 @@ class MainApp(MDApp):
 
     def on_wg_active(self, *args):
         '''Sets api URL to Enable or disable wireguard client based on the current state.'''
-        if self.root.ids.wg_switch.active == True:
-            data = {'general': {'enabled': 0}}
-            message = 'VPN Off!'
-            self.wg_change_state(data, message)
-        else:
-            data = {'general': {'enabled': 1}}
-            message = 'VPN On!'
-            self.wg_change_state(data, message)
+        try:
+            check = self.url_request_get(self.check_wg)
+            if check.status_code == 200:
+                check_rule = json.loads(check.text)
+                if check_rule['general']['enabled'] == '1':
+                    data = {"general": {"enabled": "0"}}
+                    message = 'VPN Off!'
+                    self.wg_change_state(data, message)
+                else:
+                    data = {"general": {"enabled": "1"}}
+                    message = 'VPN On!'
+                    self.wg_change_state(data, message)
+        except requests.exceptions.ConnectionError:
+            self.message_output(
+                'Error', 'Connection Error Check API info.')
+        except requests.exceptions.Timeout:
+            self.message_output(
+                'Error', 'Connection Timeout.')
+            pass
+        except requests.exceptions.InvalidSchema:
+            self.message_output(
+                'Error', 'Invalid url Please check API Info')
+            pass
 
     def wg_change_state(self, data, message):
         '''Will either enable or disable wireguard VPN depending on current status provided by on_wg_active'''
         try:
-            r = self.url_request_post(self.Start_wg)
+            r = requests.post(url=self.start_wg, timeout=5, auth=(
+                self.key, self.secret), verify=False, json=data)
             if r.status_code == 200:
-                r = self.url_request_post(self.save_wg)
-                self.message_output('Complete', message)
+                s = self.url_request_post(self.save_wg)
+                if s.status_code == 200:
+                    self.message_output('VPN', message)
             else:
                 self.message_output('Error', 'An error has occured.')
         except requests.exceptions.ConnectionError:
