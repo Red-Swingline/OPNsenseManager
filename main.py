@@ -202,10 +202,10 @@ class MainApp(MDApp):
                         rules.add_widget(IconLeftWidget(
                             icon='checkbox-marked-circle-outline'
                         ))
-                    else:
-                        rules.add_widget(IconLeftWidget(
-                            icon='checkbox-blank-circle-outline'
-                        ))
+                else:
+                    rules.add_widget(IconLeftWidget(
+                        icon='checkbox-blank-circle-outline'
+                    ))
                 self.root.ids.ruleList.add_widget(rules)
             except requests.exceptions.ConnectionError:
                 self.message_output(
