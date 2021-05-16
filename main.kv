@@ -67,6 +67,15 @@ Screen:
                             id: wg_switch
                             pos_hint: {'center_x': .8, 'center_y': .9}
                             on_press: app.on_wg_active(*args)
+                        MDLabel:
+                            id: wg_connection_status
+                            text_size: self.width, None
+                            size_hint: 1, None
+                            pos_hint: {'center_x': .52, 'center_y': .5}
+                            text: ""
+                            height: self.texture_size[1]
+                        Widget:
+
             Screen:
                 name: 'power'
                 MDBoxLayout:

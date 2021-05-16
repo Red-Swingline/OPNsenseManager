@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2021-5-16
+### Added
+- Added function that pulls current Wireguard connection status. Updated every 5 seconds when on the VPN screen.
+- Added kivy clock schedule to on_start() to update the wireguard VPN text label.
+- Added ConnectionError except to rule_state_change()
+
+### Changed 
+- Fixed indention error on the rule list generation function.
+
 ## [1.0.2] - 2021-5-15
 ### Changged
 - Refactored on_wg_active

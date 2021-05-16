@@ -5,6 +5,7 @@ from kivymd.uix.dialog import MDDialog
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem
+from kivy.clock import Clock
 from db import *
 import ssl
 import threading
@@ -50,6 +51,7 @@ class MainApp(MDApp):
     check_wg = f'{url}:{port}/api/wireguard/general/get'
     start_wg = f'{url}:{port}/api/wireguard/general/set'
     save_wg = f'{url}:{port}/api/wireguard/service/reconfigure'
+    wg_status = f'{url}:{port}/api/wireguard/service/showconf'
     url_check = f'{url}:{port}/api/core/menu/search'
 
     def on_start(self):
@@ -63,6 +65,8 @@ class MainApp(MDApp):
             self.check_wg1()  # Check Wireguard current status
             # Assign API info to text fields
             self.set_api_info_text(self.api_info)
+            self.function_interval = Clock.schedule_interval(
+                self.wg_connection_status, 5)
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
@@ -103,12 +107,6 @@ class MainApp(MDApp):
             self.root.ids.screen_manager.current = 'rules'
         else:
             self.root.ids.screen_manager.current = 'rules'
-
-    def add_back_arrow_clicked(self):
-        '''Clear text fields and change to main screen'''
-        self.root.ids.rule_description.text = ''
-        self.root.ids.rule_uuid.text = ''
-        self.call_main_screen()
 
     def set_api_info_text(self, api_info):
         '''Set API info in text fields on the API info page'''
@@ -202,10 +200,10 @@ class MainApp(MDApp):
                         rules.add_widget(IconLeftWidget(
                             icon='checkbox-marked-circle-outline'
                         ))
-                    else:
-                        rules.add_widget(IconLeftWidget(
-                            icon='checkbox-blank-circle-outline'
-                        ))
+                else:
+                    rules.add_widget(IconLeftWidget(
+                        icon='checkbox-blank-circle-outline'
+                    ))
                 self.root.ids.ruleList.add_widget(rules)
             except requests.exceptions.ConnectionError:
                 self.message_output(
@@ -338,6 +336,10 @@ class MainApp(MDApp):
                 self.message_output('Complete', message)
             else:
                 self.message_output('Error', 'An error has occured.')
+        except requests.exceptions.ConnectionError:
+            self.message_output(
+                'Error', 'Connection Error.')
+            pass
         except requests.exceptions.Timeout:
             self.message_output(
                 'Error', 'Connection Timeout.')
@@ -402,6 +404,23 @@ class MainApp(MDApp):
             self.message_output(
                 'Error', 'Invalid url Please check API Info')
             pass
+
+    def wg_connection_status(self, *args):
+        '''Every 5 seconds when the current screen is set to VPN updates connection information to a text label.'''
+        data = {}
+        if self.root.ids.screen_manager.current == 'vpn':
+            try:
+                s = requests.post(url=self.wg_status, timeout=5, auth=(
+                    self.key, self.secret), verify=False, json=data)
+                if s.status_code == 200:
+                    status = s.json()
+                    self.root.ids.wg_connection_status.text = status['response']
+            except requests.exceptions.ConnectionError:
+                pass
+            except requests.exceptions.Timeout:
+                pass
+            except requests.exceptions.InvalidSchema:
+                pass
 
     def wg_change_state(self, data, message):
         '''Will either enable or disable wireguard VPN depending on current status provided by on_wg_active'''
