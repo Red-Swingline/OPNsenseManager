@@ -1,7 +1,6 @@
 OPNsense firewall manager used to manage rules created with the firewall automation plugin. Intended to be built for android phones. 
 
 ### Usage
-- Edit config.yaml file.
 - Build with buildozers
     - In accordance with https://github.com/kivy/buildozer
     - For testing enter the below command in terminal.
