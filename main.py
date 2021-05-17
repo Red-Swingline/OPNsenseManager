@@ -192,7 +192,8 @@ class MainApp(MDApp):
                 self.url_request_get(self.rule)
                 if self.check.status_code == 200:
                     check_rule = json.loads(self.check.text)
-                    if check_rule['rule']['enabled'] == 0:
+                    print(check_rule['rule']['enabled'])
+                    if check_rule['rule']['enabled'] == '0':
                         rules.add_widget(IconLeftWidget(
                             icon='checkbox-blank-circle-outline'
                         ))
