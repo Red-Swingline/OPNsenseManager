@@ -107,7 +107,23 @@ Screen:
                         ScrollView:
                             MDList:
                                 id: ruleList_delete
-              
+            Screen:
+                name:"alias"
+                MDBoxLayout:
+                    id: alias_list
+                    orientation: 'vertical'
+                    MDToolbar:
+                        title: "Alias"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        padding: "10dp"
+                        MDDropDownItem:
+                            id: alias_drop
+                            pos_hint: {'center_x': .5, 'center_y': .5}
+                            on_release: app.alias_list(alias_drop.text)
             Screen:
                 name: "add_api_info"
                 MDBoxLayout:
@@ -194,5 +210,12 @@ Screen:
                             on_press: 
                                 nav_drawer.set_state("close")
                                 screen_manager.current = 'delete_rules'
+                            IconLeftWidget:
+                                icon: "delete"
+                        OneLineAvatarIconListItem:
+                            text: 'alias'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'alias'
                             IconLeftWidget:
                                 icon: "delete"

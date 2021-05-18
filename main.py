@@ -4,8 +4,10 @@ from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
 from kivymd.uix.dialog import MDDialog
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem
 from kivy.clock import Clock
+from kivy.properties import ObjectProperty
 from db import *
 import ssl
 import threading
@@ -18,6 +20,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class MainApp(MDApp):
+    alias_dropdown = ObjectProperty()
     db.execute("""CREATE TABLE  IF NOT EXISTS rules(
     id integer PRIMARY KEY,
     rname TEXT,
@@ -53,6 +56,7 @@ class MainApp(MDApp):
     save_wg = f'{url}:{port}/api/wireguard/service/reconfigure'
     wg_status = f'{url}:{port}/api/wireguard/service/showconf'
     url_check = f'{url}:{port}/api/core/menu/search'
+    list_aliases = f'{url}:{port}/api/firewall/alias/searchItem'
 
     def on_start(self):
         '''Runs all on start functions, database creation and queries, rule status checks whatever else needs to
@@ -177,6 +181,42 @@ class MainApp(MDApp):
         else:
             self.message_output('Error', 'Missing input.')
 
+    def alias_selection(self):
+        a = f'{self.url}:{self.port}/api/firewall/alias/listNetworkAliases'
+        self.alias_dropdown = MDDropdownMenu()
+
+        self.url_request_get(self.a)
+        if self.check.status_code == 200:
+            for i in self.check.json():
+                self.root.ids.alias_drop.append(
+                    {"viewclass": "MDMenuItem",
+                     "text": i[0],
+                     "callback":  self.alias_list(i[0])
+
+                     }
+                )
+
+    def alias_list(self, a):
+        try:
+            self.url_request_get(self.list_aliases)
+            if self.check.status_code == 200:
+                alias_list = self.check.json()
+                for alias in alias_list['rows']:
+                    if alias['name'] == a:
+                        print(alias['uuid'])
+        except requests.exceptions.ConnectionError:
+            self.message_output(
+                'Error', 'Connection Error Check API info.')
+            pass
+        except requests.exceptions.Timeout:
+            self.message_output(
+                'Error', 'Connection Timeout.')
+            pass
+        except requests.exceptions.InvalidSchema:
+            self.message_output(
+                'Error', 'Invalid url Please check API Info')
+            pass
+
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''
         self.rule_query()
@@ -192,7 +232,6 @@ class MainApp(MDApp):
                 self.url_request_get(self.rule)
                 if self.check.status_code == 200:
                     check_rule = json.loads(self.check.text)
-                    print(check_rule['rule']['enabled'])
                     if check_rule['rule']['enabled'] == '0':
                         rules.add_widget(IconLeftWidget(
                             icon='checkbox-blank-circle-outline'
