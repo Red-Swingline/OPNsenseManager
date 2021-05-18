@@ -1,13 +1,11 @@
 from kivymd.app import MDApp
 from kivymd.uix.floatlayout import MDFloatLayout
-from kivymd.uix.button import MDFlatButton, MDFloatingActionButton
+from kivymd.uix.button import MDFlatButton, MDFloatingActionButton, MDFillRoundFlatButton
 from kivymd.uix.dialog import MDDialog
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem
+from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem, OneLineAvatarIconListItem
 from kivy.clock import Clock
-from kivy.properties import ObjectProperty
 from db import *
 import ssl
 import threading
@@ -20,7 +18,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class MainApp(MDApp):
-    alias_dropdown = ObjectProperty()
     db.execute("""CREATE TABLE  IF NOT EXISTS rules(
     id integer PRIMARY KEY,
     rname TEXT,
@@ -71,6 +68,7 @@ class MainApp(MDApp):
             self.set_api_info_text(self.api_info)
             self.function_interval = Clock.schedule_interval(
                 self.wg_connection_status, 5)
+            self.alias_selection()
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
@@ -109,6 +107,8 @@ class MainApp(MDApp):
             self.root.ids.rule_description.text = ''
             self.root.ids.rule_uuid.text = ''
             self.root.ids.screen_manager.current = 'rules'
+        elif screen == 'alias_details':
+            self.root.ids.screen_manager.current = 'alias'
         else:
             self.root.ids.screen_manager.current = 'rules'
 
@@ -183,18 +183,15 @@ class MainApp(MDApp):
 
     def alias_selection(self):
         a = f'{self.url}:{self.port}/api/firewall/alias/listNetworkAliases'
-        self.alias_dropdown = MDDropdownMenu()
-
-        self.url_request_get(self.a)
+        self.url_request_post(a)
         if self.check.status_code == 200:
-            for i in self.check.json():
-                self.root.ids.alias_drop.append(
-                    {"viewclass": "MDMenuItem",
-                     "text": i[0],
-                     "callback":  self.alias_list(i[0])
-
-                     }
+            alias = self.check.json()
+            for key, value in alias.items():
+                alias_item = OneLineAvatarIconListItem(
+                    text=str(value),
+                    on_release=lambda x: self.alias_list(x.text)
                 )
+                self.root.ids.aliasList.add_widget(alias_item)
 
     def alias_list(self, a):
         try:
@@ -203,7 +200,18 @@ class MainApp(MDApp):
                 alias_list = self.check.json()
                 for alias in alias_list['rows']:
                     if alias['name'] == a:
-                        print(alias['uuid'])
+                        a_name = str(alias['name'])
+                        a_ip = str(alias['content'])
+                        self.root.ids.alias_details_name.text = a_name
+                        self.root.ids.alias_ip_info.text = a_ip
+                        add_button = MDFillRoundFlatButton(
+                            text='Add IP',
+                            pos_hint = {'center_x': .6, 'center_y': .8},
+                            on_release = lambda x: print('place holder') # Place holder will be changed to the function that will add IP to selected alias.
+                        )
+                        # Need to add text input box
+                        self.root.ids.details.add_widget(add_button)
+                    self.root.ids.screen_manager.current = 'alias_details'
         except requests.exceptions.ConnectionError:
             self.message_output(
                 'Error', 'Connection Error Check API info.')
