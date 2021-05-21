@@ -7,6 +7,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.list import TwoLineIconListItem, IconLeftWidget, TwoLineListItem, OneLineAvatarIconListItem
 from kivy.clock import Clock
 from db import *
+import re
 import ssl
 import threading
 import requests
@@ -54,6 +55,7 @@ class MainApp(MDApp):
     wg_status = f'{url}:{port}/api/wireguard/service/showconf'
     url_check = f'{url}:{port}/api/core/menu/search'
     list_aliases = f'{url}:{port}/api/firewall/alias/searchItem'
+    alias_reconfigure = f'{url}:{port}/api/firewall/alias/reconfigure'
 
     def on_start(self):
         '''Runs all on start functions, database creation and queries, rule status checks whatever else needs to
@@ -109,6 +111,8 @@ class MainApp(MDApp):
             self.root.ids.screen_manager.current = 'rules'
         elif screen == 'alias_details':
             self.root.ids.screen_manager.current = 'alias'
+            self.root.ids.details.remove_widget(
+                self.root.ids.details.children[0])
         else:
             self.root.ids.screen_manager.current = 'rules'
 
@@ -182,6 +186,7 @@ class MainApp(MDApp):
             self.message_output('Error', 'Missing input.')
 
     def alias_selection(self):
+        '''Request alias list from firewall and generates a list of aliases loads details screen when clicked.'''
         a = f'{self.url}:{self.port}/api/firewall/alias/listNetworkAliases'
         self.url_request_post(a)
         if self.check.status_code == 200:
@@ -189,11 +194,12 @@ class MainApp(MDApp):
             for key, value in alias.items():
                 alias_item = OneLineAvatarIconListItem(
                     text=str(value),
-                    on_release=lambda x: self.alias_list(x.text)
+                    on_release=lambda x: self.alias_details(x.text)
                 )
                 self.root.ids.aliasList.add_widget(alias_item)
 
-    def alias_list(self, a):
+    def alias_details(self, a):
+        '''Displays alias details screen, Name, and IP information. It also includes a text field for adding IP addresses.'''
         try:
             self.url_request_get(self.list_aliases)
             if self.check.status_code == 200:
@@ -202,16 +208,65 @@ class MainApp(MDApp):
                     if alias['name'] == a:
                         a_name = str(alias['name'])
                         a_ip = str(alias['content'])
+                        a_uuid = str(alias['uuid'])
                         self.root.ids.alias_details_name.text = a_name
                         self.root.ids.alias_ip_info.text = a_ip
                         add_button = MDFillRoundFlatButton(
                             text='Add IP',
-                            pos_hint = {'center_x': .6, 'center_y': .8},
-                            on_release = lambda x: print('place holder') # Place holder will be changed to the function that will add IP to selected alias.
+                            pos_hint={'center_x': .6, 'center_y': .6},
+                            on_release=lambda x: self.add_ip_to_alias(
+                                a_uuid, a_ip)
                         )
-                        # Need to add text input box
                         self.root.ids.details.add_widget(add_button)
                     self.root.ids.screen_manager.current = 'alias_details'
+        except requests.exceptions.ConnectionError:
+            self.message_output(
+                'Error', 'Connection Error Check API info.')
+            pass
+        except requests.exceptions.Timeout:
+            self.message_output(
+                'Error', 'Connection Timeout.')
+            pass
+        except requests.exceptions.InvalidSchema:
+            self.message_output(
+                'Error', 'Invalid url Please check API Info')
+            pass
+
+    def add_ip_to_alias(self, uuid, a_ip):
+        '''Builds the JSON payload required to post to add IP to the alias. Also sends post request, and returns
+           then send a post request to reconfigure alias. Only one IP input is supported at the moment.
+        '''
+        alias_ip = re.sub('[,]', '\n', a_ip)
+        new_ip = self.root.ids.ip_address.text.strip()
+        set_url = f'{self.url}:{self.port}/api/firewall/alias/setItem/{uuid}'
+
+        self.url_request_get(
+            f'{self.url}:{self.port}/api/firewall/alias/getItem/{uuid}')
+        slected_alias = self.check.json()
+
+        alias_name = f'{str(slected_alias["alias"]["name"])}'
+        payload = {
+            "alias": {
+                "enabled": f'{str(slected_alias["alias"]["enabled"])}',
+                "name": f'{alias_name}',
+                "type": 'host',
+                "proto": '',
+                "updatefreq": f'{str(slected_alias["alias"]["updatefreq"])}',
+                "content": f'{alias_ip}'+'\n'+f'{new_ip}',
+                "counters": f'{str(slected_alias["alias"]["counters"])}',
+                "description": f'{str(slected_alias["alias"]["description"])}'
+            },
+            "network_content": ""
+        }
+        try:
+            a = requests.post(url=set_url, timeout=10, auth=(
+                self.key, self.secret), verify=False, json=payload)
+            if a.status_code == 200:
+                # self.url_request_post(self.alias_reconfigure)
+                self.root.ids.ip_address.text = ''
+                self.message_output(
+                    "Added", f"IP has been added to {alias_name}")
+                self.root.ids.screen_manager.current = 'alias'
         except requests.exceptions.ConnectionError:
             self.message_output(
                 'Error', 'Connection Error Check API info.')

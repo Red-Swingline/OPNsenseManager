@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2021-5-21
+### Added 
+- Added a Screen to list all aliases. When clicked screen will change to detail view.
+- Added a screen for alias details.
+- Added user input to add IP address to alias. This is limited to one IP at a time.
+ 
 ## [1.0.3] - 2021-5-16
 ### Added
 - Added function that pulls current Wireguard connection status. Updated every 5 seconds when on the VPN screen.

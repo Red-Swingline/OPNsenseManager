@@ -131,7 +131,6 @@ Screen:
                     MDToolbar:
                         title: "Alias Details"
                         elevation: 10
-                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
                         right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
                     MDRelativeLayout:
                         id:details
@@ -149,6 +148,12 @@ Screen:
                             pos_hint: {'center_x': .6, 'center_y': .8}
                             text: ""
                             height: self.texture_size[1]
+                        MDTextField:
+                            id: ip_address
+                            pos_hint: {'center_x': .36, 'center_y': .7}
+                            mode: "rectangle"
+                            size_hint_x: .5                         
+                            hint_text: "Enter 1 IP address"
 
             Screen:
                 name: "add_api_info"
