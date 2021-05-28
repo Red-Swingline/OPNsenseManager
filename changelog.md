@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2021-5-28
+### Added
+- Added a check in the on_start() to see if the app can connect to the firewall. This fixes crash if API info in the DB but incorrect or there are connectivity issues.
+
 ## [1.0.4] - 2021-5-21
 ### Added 
 - Added a Screen to list all aliases. When clicked screen will change to detail view.

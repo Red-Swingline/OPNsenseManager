@@ -8,8 +8,7 @@ OPNsense firewall manager used to manage rules created with the firewall automat
  
 ### Todo
 - [ ] Add String validation for inputs.
-- [ ] Speed up rule list generation on load.
-- [x] Add ability to add IP to firewall alias.
+
 
 
 ### Screenshots
