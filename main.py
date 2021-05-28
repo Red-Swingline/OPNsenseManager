@@ -62,15 +62,30 @@ class MainApp(MDApp):
         happen on start'''
 
         if len(self.api_info) > 0:
-
-            self.rule_list()  # Generate Rule List on load
-            self.delete_rule_list()  # Generate Delete Rule List on load
-            self.check_wg1()  # Check Wireguard current status
             # Assign API info to text fields
             self.set_api_info_text(self.api_info)
-            self.function_interval = Clock.schedule_interval(
-                self.wg_connection_status, 5)
-            self.alias_selection()
+
+            try:
+                # checks if app can even connect to the firewall.
+                self.check = requests.post(url=self.url_check, auth=(
+                    self.key, self.secret), verify=False)
+                if self.check.status_code == 200:
+
+                    self.rule_list()  # Generate Rule List on load
+                    self.delete_rule_list()  # Generate Delete Rule List on load
+                    self.check_wg1()  # Check Wireguard current status
+                    self.function_interval = Clock.schedule_interval(
+                        self.wg_connection_status, 2)
+                    self.alias_selection()
+            except requests.exceptions.ConnectionError:
+                self.connection_error()
+                pass
+            except requests.exceptions.Timeout:
+                self.connection_timeout()
+                pass
+            except requests.exceptions.InvalidSchema:
+                self.invalid_url()
+                pass
 
     def build(self):
         '''Sets app theme color and loads the builder kv file'''
@@ -220,16 +235,13 @@ class MainApp(MDApp):
                         self.root.ids.details.add_widget(add_button)
                     self.root.ids.screen_manager.current = 'alias_details'
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
             pass
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def add_ip_to_alias(self, uuid, a_ip):
@@ -268,16 +280,13 @@ class MainApp(MDApp):
                     "Added", f"IP has been added to {alias_name}")
                 self.root.ids.screen_manager.current = 'alias'
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
             pass
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def rule_list(self):
@@ -309,8 +318,7 @@ class MainApp(MDApp):
                     ))
                 self.root.ids.ruleList.add_widget(rules)
             except requests.exceptions.ConnectionError:
-                self.message_output(
-                    'Error', 'Connection Error Check API info.')
+                self.connection_error()
                 rules.add_widget(IconLeftWidget(
                     icon='checkbox-blank-circle-outline'
                 ))
@@ -318,8 +326,7 @@ class MainApp(MDApp):
                 self.dialog.dismiss()
                 pass
             except requests.exceptions.Timeout:
-                self.message_output(
-                    'Error', 'Connection Timeout.')
+                self.connection_timeout()
                 rules.add_widget(IconLeftWidget(
                     icon='checkbox-blank-circle-outline'
                 ))
@@ -327,8 +334,7 @@ class MainApp(MDApp):
                 self.dialog.dismiss()
                 pass
             except requests.exceptions.InvalidSchema:
-                self.message_output(
-                    'Error', 'Invalid url Please check API Info')
+                self.invalid_url()
                 rules.add_widget(IconLeftWidget(
                     icon='checkbox-blank-circle-outline'
                 ))
@@ -416,15 +422,12 @@ class MainApp(MDApp):
             if self.check.status_code == 401:
                 self.message_output('Error', 'Check API info.')
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def rule_state_change(self, r_url, new_icon, x, message):
@@ -440,16 +443,27 @@ class MainApp(MDApp):
             else:
                 self.message_output('Error', 'An error has occured.')
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error.')
+            self.connection_error()
             pass
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output('Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
+
+    def connection_error(self):
+        '''Connection error message'''
+        self.message_output(
+            'Error', 'Connection Error Check API info.')
+
+    def connection_timeout(self):
+        self.message_output(
+            'Error', 'Connection Timeout.')
+
+    def invalid_url(self):
+        self.message_output(
+            'Error', 'Invalid url Please check API Info')
 
     def message_output(self, title, message):
         '''Creates a popup message to the user when required'''
@@ -475,11 +489,10 @@ class MainApp(MDApp):
             pass
 
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output('Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def on_wg_active(self, *args):
@@ -497,15 +510,12 @@ class MainApp(MDApp):
                     message = 'VPN On!'
                     self.wg_change_state(data, message)
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def wg_connection_status(self, *args):
@@ -537,15 +547,12 @@ class MainApp(MDApp):
             else:
                 self.message_output('Error', 'An error has occured.')
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def reboot(self):
@@ -557,15 +564,12 @@ class MainApp(MDApp):
             else:
                 self.message_output('Error', 'An error has occured.')
         except requests.exceptions.ConnectionError:
-            self.message_output(
-                'Error', 'Connection Error Check API info.')
+            self.connection_error()
         except requests.exceptions.Timeout:
-            self.message_output(
-                'Error', 'Connection Timeout.')
+            self.connection_timeout()
             pass
         except requests.exceptions.InvalidSchema:
-            self.message_output(
-                'Error', 'Invalid url Please check API Info')
+            self.invalid_url()
             pass
 
     def close_dialog(self, obj):
