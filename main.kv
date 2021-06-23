@@ -18,6 +18,21 @@ Screen:
                             MDList:
                                 id: ruleList
             Screen:
+                name:"Connected_Devices"
+                MDBoxLayout:
+                    id: connected_devices
+                    orientation: 'vertical'                   
+                    MDToolbar:
+                        title: "Device List"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        padding: "10dp"
+                        ScrollView:
+                            MDList:
+                                id: devicelist
+            Screen:
                 name: "add_rules"
                 MDBoxLayout:
                     orientation: 'vertical'
@@ -208,6 +223,13 @@ Screen:
                                 screen_manager.current = 'rules'
                             IconLeftWidget:
                                 icon: "clipboard-list-outline"
+                        OneLineAvatarIconListItem:
+                            text: 'Device List'
+                            on_press: 
+                                nav_drawer.set_state("close")
+                                screen_manager.current = 'Connected_Devices'
+                            IconLeftWidget:
+                                icon: "cellphone"                                 
                         OneLineAvatarIconListItem:
                             text: 'VPN'
                             on_press: 

@@ -56,6 +56,7 @@ class MainApp(MDApp):
     url_check = f'{url}:{port}/api/core/menu/search'
     list_aliases = f'{url}:{port}/api/firewall/alias/searchItem'
     alias_reconfigure = f'{url}:{port}/api/firewall/alias/reconfigure'
+    get_arp_table = f'{url}:{port}/api/diagnostics/interface/getArp'
 
     def on_start(self):
         '''Runs all on start functions, database creation and queries, rule status checks whatever else needs to
@@ -77,6 +78,7 @@ class MainApp(MDApp):
                     self.function_interval = Clock.schedule_interval(
                         self.wg_connection_status, 2)
                     self.alias_selection()
+                    self.arp_table_list()
             except requests.exceptions.ConnectionError:
                 self.connection_error()
                 pass
@@ -288,6 +290,17 @@ class MainApp(MDApp):
         except requests.exceptions.InvalidSchema:
             self.invalid_url()
             pass
+
+    def arp_table_list(self):
+        '''API get request for the ARP table on the firewall. Then generates a scrollview list of device IPs, Hostname, and '''
+        arp_table = self.url_request_get(self.get_arp_table)
+        arp_list = json.loads(arp_table.text)
+        for d in arp_list:
+            arp = TwoLineIconListItem(
+                text= 'IP address: ' + d['ip'],
+                secondary_text='HostName: ' + d['hostname']
+            )
+            self.root.ids.devicelist.add_widget(arp)
 
     def rule_list(self):
         '''Query of all rules and generates a list view under the rule tab....not really working all the way yet'''

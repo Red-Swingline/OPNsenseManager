@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2021-6-
+### Added
+- Screen for ARP Table list
+- Added method for API call and list gneration.
+
 ## [1.0.5] - 2021-5-28
 ### Added
 - Added a check in the on_start() to see if the app can connect to the firewall. This fixes crash if API info in the DB but incorrect or there are connectivity issues.
