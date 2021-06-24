@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.6] - 2021-6-
+## [1.0.6] - 2021-6-24
 ### Added
 - Screen for ARP Table list
-- Added method for API call and list gneration.
+- Added method for API call of the ARP table, this method also generates the ScrollView list.
+- Added a menu option called "Device List"
 
 ## [1.0.5] - 2021-5-28
 ### Added
