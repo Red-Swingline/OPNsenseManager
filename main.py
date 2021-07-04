@@ -296,7 +296,7 @@ class MainApp(MDApp):
         arp_table = self.url_request_get(self.get_arp_table)
         arp_list = json.loads(arp_table.text)
         for d in arp_list:
-            arp = TwoLineIconListItem(
+            arp = TwoLineListItem(
                 text= 'IP address: ' + d['ip'],
                 secondary_text='HostName: ' + d['hostname']
             )
