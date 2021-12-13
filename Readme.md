@@ -1,9 +1,13 @@
 OPNsense firewall manager used to manage rules created with the firewall automation plugin and intended to run on android phones. This app is given to clients who aren't very technical and need something more simplistic than the web interface provided by OPNsense, so it is intentionally light in its capabilities. It provides the clients the ability to conduct immediate actions then raise a ticket to me to go in and make configuration changes as needed.
 
+
+<br>**NOTE:** All rules you would like to control with this app need to be recreated using the firewall automation plugin https://docs.opnsense.org/development/api/plugins/firewall.html
+<br>
+
 ## Current capabilities
 - Stores API info in SQLite database.
     - Allows the user to manually paste keys, secret, URL/IP, and port number. (all Required to function)
-- Firewall rule enable/disable
+- Firewall rule enable/disable <br>
     - Checks the current status of each rule on load.
     - stores rule list locally in SQLite table.
     - Delete rule from SQLite table.
