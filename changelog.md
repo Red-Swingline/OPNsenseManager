@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2022-7-10
+### Added
+- new layout for Alias details screen
+- Moved create tables to db.py
+
+### Changed
+- If no API info set API info screen as current and display a message to add API info.
+
+### Fixed
+- Fixed spacing on navigation nav_drawer
+- Formatting
+
 ## [1.0.6] - 2021-6-24
 ### Added
 - Screen for ARP Table list

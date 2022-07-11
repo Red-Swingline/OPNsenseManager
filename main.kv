@@ -7,7 +7,7 @@ Screen:
                 MDBoxLayout:
                     id: rule_list
                     orientation: 'vertical'                   
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Rule List"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -22,7 +22,7 @@ Screen:
                 MDBoxLayout:
                     id: connected_devices
                     orientation: 'vertical'                   
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Device List"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -36,7 +36,7 @@ Screen:
                 name: "add_rules"
                 MDBoxLayout:
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Add Rule"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -68,7 +68,7 @@ Screen:
                 name: "vpn"
                 MDBoxLayout:
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "VPN"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -88,14 +88,14 @@ Screen:
                             size_hint: 1, None
                             pos_hint: {'center_x': .52, 'center_y': .5}
                             text: ""
-                            height: self.texture_size[1]
+                            #height: self.texture_size[1]
                         Widget:
 
             Screen:
                 name: 'power'
                 MDBoxLayout:
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Power"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -111,7 +111,7 @@ Screen:
                 MDBoxLayout:
                     id: rule_list
                     orientation: 'vertical'                   
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Delete Rules"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -127,7 +127,7 @@ Screen:
                 MDBoxLayout:
                     id: alias_list
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Alias"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -143,38 +143,33 @@ Screen:
                 MDBoxLayout:
                     id:alias_list
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Alias Details"
                         elevation: 10
                         right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    MDRelativeLayout:
+                    RelativeLayout:
                         id:details
                         MDLabel:
                             id:alias_details_name
-                            text_size: self.width, None
-                            size_hint: 1, None
-                            pos_hint:{'center_x':.6,'center_y':.9}
+                            pos_hint: {'x': .1, 'y': .4}
                             text: ""
-                            height: self.texture_size[1]
-                        MDLabel:
-                            id:alias_ip_info    
-                            text_size: self.width, None
-                            size_hint: 1, None
-                            pos_hint: {'center_x': .6, 'center_y': .8}
-                            text: ""
-                            height: self.texture_size[1]
                         MDTextField:
                             id: ip_address
-                            pos_hint: {'center_x': .36, 'center_y': .7}
+                            pos_hint: {'x': .1, 'y': .5}
                             mode: "rectangle"
-                            size_hint_x: .5                         
-                            hint_text: "Enter 1 IP address"
+                            width:500                    
+                            hint_text: "Enter IP address(s) use , to separate IP addresses"
+                    FloatLayout:
+                        ScrollView:
+                            MDList:
+                                id: alias_ip_list
+
 
             Screen:
                 name: "add_api_info"
                 MDBoxLayout:
                     orientation: 'vertical'
-                    MDToolbar:
+                    MDTopAppBar:
                         title: "Add API Info"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
@@ -193,7 +188,7 @@ Screen:
                         id: api_url
                         pos_hint: {'center_x': .5, 'center_y': .5}
                         size_hint_x: .9                         
-                        hint_text: "Enter URL or IP"
+                        hint_text: "Enter URL or IP https://0.0.0.0"
                     MDTextField:
                         id: url_port
                         pos_hint: {'center_x': .5, 'center_y': .5}
@@ -209,66 +204,65 @@ Screen:
 
         MDNavigationDrawer:
             id: nav_drawer
-            BoxLayout:
+            MDBoxLayout:
                 orientation: 'vertical'
                 Image: 
                     source: 'images/logo.png'
-                    elevation_normal: 8
-                ScrollView:
-                    MDList:
-                        OneLineAvatarIconListItem:
-                            text: 'Rule List'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'rules'
-                            IconLeftWidget:
-                                icon: "clipboard-list-outline"
-                        OneLineAvatarIconListItem:
-                            text: 'Device List'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'Connected_Devices'
-                            IconLeftWidget:
-                                icon: "cellphone"                                 
-                        OneLineAvatarIconListItem:
-                            text: 'VPN'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'vpn'
-                            IconLeftWidget:
-                                icon: "vpn"  
-                        OneLineAvatarIconListItem:
-                            text: 'Power'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'power'
-                            IconLeftWidget:
-                                icon: "power"                         
-                        OneLineAvatarIconListItem:
-                            text: 'Add Rules'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'add_rules'
-                            IconLeftWidget:
-                                icon: "database-plus" 
-                        OneLineAvatarIconListItem:
-                            text: 'API Info'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'add_api_info'
-                            IconLeftWidget:
-                                icon: "api"                        
-                        OneLineAvatarIconListItem:
-                            text: 'Delete Rules'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'delete_rules'
-                            IconLeftWidget:
-                                icon: "delete"
-                        OneLineAvatarIconListItem:
-                            text: 'alias'
-                            on_press: 
-                                nav_drawer.set_state("close")
-                                screen_manager.current = 'alias'
-                            IconLeftWidget:
-                                icon: "application-cog"
+                    elevation_normal: 10
+                MDList:
+                    OneLineAvatarIconListItem:
+                        text: 'Rule List'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'rules'
+                        IconLeftWidget:
+                            icon: "clipboard-list-outline"
+                    OneLineAvatarIconListItem:
+                        text: 'Device List'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'Connected_Devices'
+                        IconLeftWidget:
+                            icon: "cellphone"                                 
+                    OneLineAvatarIconListItem:
+                        text: 'VPN'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'vpn'
+                        IconLeftWidget:
+                            icon: "vpn"  
+                    OneLineAvatarIconListItem:
+                        text: 'Power'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'power'
+                        IconLeftWidget:
+                            icon: "power"                         
+                    OneLineAvatarIconListItem:
+                        text: 'Add Rules'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'add_rules'
+                        IconLeftWidget:
+                            icon: "database-plus" 
+                    OneLineAvatarIconListItem:
+                        text: 'API Info'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'add_api_info'
+                        IconLeftWidget:
+                            icon: "api"                        
+                    OneLineAvatarIconListItem:
+                        text: 'Delete Rules'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'delete_rules'
+                        IconLeftWidget:
+                            icon: "delete"
+                    OneLineAvatarIconListItem:
+                        text: 'alias'
+                        on_press: 
+                            nav_drawer.set_state("close")
+                            screen_manager.current = 'alias'
+                        IconLeftWidget:
+                            icon: "application-cog"
