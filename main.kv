@@ -17,8 +17,10 @@ Screen:
                         size : dp(320),dp(450)
                         pos_hint : {"center_x":.5,"y":.5}
                         elevation : 15
+                        elevated: "#f6eeee"
                         padding : dp(20)
                         spacing : dp(30)
+                        outlined : "#f8f5f4"
                         orientation : "vertical"
                         Image:
                             allow_stretch: True
@@ -26,7 +28,6 @@ Screen:
                             source: './images/logo.png'
                         MDTextField :
                             id: login_txt
-                            mode: "rectangle"
                             write_tab: False
                             multiline: False
                             hint_text : "password"
@@ -65,7 +66,7 @@ Screen:
                         MDBottomNavigationItem:
                             name: 'rule_list'
                             text: 'Rule List'
-                            icon: 'clipboard-list-outline'
+                            icon: 'wall-fire'
                             
                             ScrollView:
                                 MDList:
@@ -80,15 +81,17 @@ Screen:
                                     id: rule_description
                                     pos_hint: {'center_x': .5, 'center_y': .9}
                                     size_hint_x: .5
-                                    mode: "rectangle"
+                                    write_tab: False
+                                    multiline: False
                                     hint_text: "Enter Description"
                                     helper_text: "Description"
                                     helper_text_mode: "on_focus"                   
                                 MDTextField:
                                     id: rule_uuid
                                     pos_hint: {'center_x': .5, 'center_y': .7}
-                                    size_hint_x: .5
-                                    mode: "rectangle"                           
+                                    size_hint_x: .5 
+                                    write_tab: False
+                                    multiline: False                         
                                     hint_text: "Enter UUID"
                                     helper_text: "UUID"
                                     helper_text_mode: "on_focus"
@@ -200,22 +203,30 @@ Screen:
                                     pos_hint: {'center_x': .5, 'center_y': .8}
                                     size_hint_x: .9                          
                                     hint_text: "Enter API secret"
+                                    write_tab: False
+                                    multiline: False
                                 MDTextField:
                                     id: api_url
                                     pos_hint: {'center_x': .5, 'center_y': .7}
                                     size_hint_x: .9                         
                                     hint_text: "Enter URL or IP https://0.0.0.0"
+                                    write_tab: False
+                                    multiline: False
                                 MDTextField:
                                     id: url_port
                                     pos_hint: {'center_x': .5, 'center_y': .6}
                                     size_hint_x: .9                          
                                     hint_text: "Enter Port Number"
+                                    write_tab: False
+                                    multiline: False
                                 MDTextField:
                                     id: password_txt
                                     password: True
                                     pos_hint: {'center_x': .5, 'center_y': .5}
                                     size_hint_x: .9                          
                                     hint_text: "Enter Optional Password"
+                                    write_tab: False
+                                    multiline: False
                                 MDRaisedButton:
                                     text: "Submit"
                                     pos_hint: {'center_x': .7, 'center_y': .4}
@@ -263,6 +274,8 @@ Screen:
                             pos_hint: {'center_x': .5, 'center_y': .6}
                             size_hint_x: .9                
                             hint_text: "Enter IP address(s) use , to separate IP addresses"
+                            write_tab: False
+                            multiline: False
                     ScrollView:
                         MDList:
                             id: alias_ip_list
@@ -288,7 +301,7 @@ Screen:
                 DrawerClickableItem:
                     id: rule_menu_btn
                     text: "Rules"
-                    icon: "clipboard-list-outline"
+                    icon: "wall-fire"
                     on_press: 
                         nav_drawer.set_state("close")
                         screen_manager.current = 'rules'

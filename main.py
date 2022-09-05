@@ -25,7 +25,6 @@ import ssl
 import requests
 import json
 import urllib3
-import httplib2
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -134,9 +133,7 @@ class MainApp(MDApp):
     def build(self):
         """Sets app theme color and loads the builder kv file"""
         self.theme_cls.primary_palette = "Amber"
-        self.screen = Builder.load_file("main.kv")
 
-        return self.screen
 
     def rule_query(self):
         """Queries the SQLite table to get stored list of rules to be managed from the app."""
