@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas,ttf,db
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 1.0.7
+version = 2.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -36,7 +36,7 @@ version = 1.0.7
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements =  python3==3.9.7,hostpython3==3.9.7,kivy,requests,pillow,urllib3,chardet,idna,pyyaml,sdl2_ttf==2.0.15,https://github.com/kivymd/KivyMD/archive/master.zip
+requirements =  python3==3.9.7,hostpython3==3.9.7,kivy==2.1.0,kivymd==1.0.2,requests,pillow,urllib3,chardet,idna,pyyaml,sdl2_ttf==2.0.15,iptools,bcrypt
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -52,7 +52,7 @@ presplash.filename = %(source.dir)s/images/splash.png
 icon.filename = %(source.dir)s/images/icon.png
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
-orientation = portrait
+orientation = all
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY

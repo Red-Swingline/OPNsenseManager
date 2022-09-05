@@ -6,6 +6,8 @@ from kivymd.uix.button import (
     MDFillRoundFlatButton,
 )
 from kivymd.uix.dialog import MDDialog
+from kivymd.uix.behaviors import RoundedRectangularElevationBehavior
+from kivymd.uix.card import MDCard
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivymd.uix.list import (
@@ -17,15 +19,19 @@ from kivymd.uix.list import (
 )
 from kivy.clock import Clock
 from db import *
+import bcrypt
 import re
 import ssl
-import threading
 import requests
 import json
 import urllib3
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+class MD3Card(MDCard, RoundedRectangularElevationBehavior):
+    """Implements a material design v3 card."""
 
 
 class MainApp(MDApp):
@@ -53,6 +59,11 @@ class MainApp(MDApp):
     list_aliases = f"{url}:{port}/api/firewall/alias/searchItem"
     alias_reconfigure = f"{url}:{port}/api/firewall/alias/reconfigure"
     get_arp_table = f"{url}:{port}/api/diagnostics/interface/getArp"
+    flush_arp_table = f"{url}:{port}/api/diagnostics/interface/flushArp"
+    arp_refersh = {
+        "Reload list": "reload",
+        "Flush ARP": "delete",
+    }
 
     def on_start(self):
         """Runs all on start functions, database creation and queries, rule status checks whatever else needs to
@@ -60,39 +71,69 @@ class MainApp(MDApp):
 
         api_info = self.get_api_info()
         if len(api_info) > 0:
-            self.set_api_info_text(api_info)
-            try:
-                check = requests.post(
-                    url=self.url_check, auth=(self.key, self.secret), verify=False
-                )
-                if check.status_code == 200:
-                    self.rule_list()
-                    self.delete_rule_list()
-                    self.check_wg1()
-                    self.function_interval = Clock.schedule_interval(
-                        self.wg_connection_status, 2
-                    )
-                    self.alias_selection()
-                    self.arp_table_list()
-            except requests.exceptions.ConnectionError:
-                self.connection_error()
-                pass
-            except requests.exceptions.Timeout:
-                self.connection_timeout()
-                pass
-            except requests.exceptions.InvalidSchema:
-                self.invalid_url()
-                pass
+            if api_info[0][5] != '':
+                self.root.ids.screen_manager.current = "login"
+            else:
+                self.after_login_checks(api_info)
         else:
-            self.root.ids.screen_manager.current = "add_api_info"
+            self.root.ids.screen_manager.current = "settings"
             self.message_output("Info", "Enter API info")
+
+    def login_check(self):
+        api_info = self.get_api_info()
+        hashed = api_info[0][5].encode()
+        password = self.root.ids.login_txt.text.strip()
+        password = password.encode()
+        if bcrypt.checkpw(password, hashed):
+            self.after_login_checks(api_info)
+            self.root.ids.login_menu_btn.disabled = False
+            self.root.ids.login_menu_btn.opacity = 1
+        else:
+            self.message_output("Error", "Check password")
+
+    def after_login_checks(self, api_info):
+        self.set_api_info_text(api_info)
+        try:
+            check = requests.post(
+                url=self.url_check, auth=(
+                    self.key, self.secret), verify=False
+            )
+            if check.status_code == 200:
+                self.rule_list()
+                self.delete_rule_list()
+                self.check_wg1()
+                self.function_interval = Clock.schedule_interval(
+                    self.wg_connection_status, 2
+                )
+                self.alias_selection()
+                self.arp_table_list()
+                self.root.ids.login_txt.text = ''
+                self.root.ids.screen_manager.current = "rules"
+        except requests.exceptions.ConnectionError:
+            self.connection_error()
+            pass
+        except requests.exceptions.Timeout:
+            self.connection_timeout()
+            pass
+        except requests.exceptions.InvalidSchema:
+            self.invalid_url()
+            pass
+
+    def logout(self):
+        self.root.ids.ruleList.clear_widgets()
+        self.root.ids.ruleList_delete.clear_widgets()
+        self.root.ids.devicelist.clear_widgets()
+        self.root.ids.aliasList.clear_widgets()
+        self.root.ids.api_key.text = ''
+        self.root.ids.api_secret.text = ''
+        self.root.ids.api_url.text = ''
+        self.root.ids.url_port.text = ''
+        self.root.ids.password_txt.text = ''
 
     def build(self):
         """Sets app theme color and loads the builder kv file"""
         self.theme_cls.primary_palette = "Amber"
-        self.screen = Builder.load_file("main.kv")
 
-        return self.screen
 
     def rule_query(self):
         """Queries the SQLite table to get stored list of rules to be managed from the app."""
@@ -122,13 +163,14 @@ class MainApp(MDApp):
         """Handles actions for toolbar right arrow actions, currently returns to Rules screen"""
         screen = self.root.ids.screen_manager.current
         self.root.ids.screen_manager.direction = "left"
-        if screen == "add_rules":
+        if screen == "rules":
             self.root.ids.rule_description.text = ""
             self.root.ids.rule_uuid.text = ""
-            self.root.ids.screen_manager.current = "rules"
+            self.root.ids.screen_manager.current = "settings"
         elif screen == "alias_details":
             self.root.ids.screen_manager.current = "alias"
-            self.root.ids.details.remove_widget(self.root.ids.details.children[0])
+            self.root.ids.details.remove_widget(
+                self.root.ids.details.children[0])
         else:
             self.root.ids.screen_manager.current = "rules"
 
@@ -140,6 +182,23 @@ class MainApp(MDApp):
             self.root.ids.api_secret.text = f"{api_info[0][2]}"
             self.root.ids.api_url.text = f"{api_info[0][3]}"
             self.root.ids.url_port.text = f"{api_info[0][4]}"
+            if api_info[0][5] != "":
+                self.root.ids.password_txt.text = "Password set"
+
+    def arp_callbacks(self, instance):
+        """Callback handler for action button on device list"""
+        if instance.icon == 'reload':
+            instance.parent.close_stack()
+            self.reload_device()
+        else:
+            instance.parent.close_stack()
+            self.url_request_post(self.flush_arp_table)
+            self.reload_device()
+
+    def reload_device(self):
+        """Reloads ARP device list"""
+        self.root.ids.devicelist.clear_widgets()
+        self.arp_table_list()
 
     def add_rule_clicked(self, rule_description, rule_uuid):
         """When the add button is clicked on the add rule screen, it will insert a text field string into the SQLite table.
@@ -177,13 +236,21 @@ class MainApp(MDApp):
         url = api_url.strip()
         port = url_port.strip()
         api_info = self.get_api_info()
+        password = self.root.ids.password_txt.text.strip()
+        password = password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password, salt)
+        if password != '':
+            stored_hash = hashed.decode()
+        else:
+            stored_hash = NULL
         if len(api_info) == 0:
             if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
                 try:
                     db.execute(
                         f"""INSERT INTO api_info(
-                                    api_key, api_secret, url, port) VALUES
-                                    ('{key}', '{secret}', '{url}', '{port}')"""
+                                    api_key, api_secret, url, port, password) VALUES
+                                    ('{key}', '{secret}', '{url}', '{port}', '{stored_hash}')"""
                     )
                 finally:
                     mydb.commit()
@@ -194,15 +261,27 @@ class MainApp(MDApp):
         elif len(api_info) == 1:
 
             if len(key) > 0 and len(secret) > 0 and len(url) > 0 and len(port) > 0:
-                try:
+                if self.root.ids.password_txt.text == "Password set":
                     db.execute(
                         f"""UPDATE api_info SET api_key = '{key}',
                     api_secret = '{secret}', url = '{url}', port = '{port}' WHERE id = 1; """
                     )
-
-                finally:
-                    mydb.commit()
-                    self.message_output("Info", "API info has been saved.")
+                elif self.root.ids.password_txt.text == '':
+                    db.execute(
+                        f"""UPDATE api_info SET api_key = '{key}',
+                    api_secret = '{secret}', url = '{url}', port = '{port}', password = '' WHERE id = 1; """
+                    )
+                    self.root.ids.login_menu_btn.disabled = True
+                    self.root.ids.login_menu_btn.opacity = 0
+                else:
+                    db.execute(
+                        f"""UPDATE api_info SET api_key = '{key}',
+                    api_secret = '{secret}', url = '{url}', port = '{port}', password = '{stored_hash}'WHERE id = 1; """
+                    )
+                    self.root.ids.login_menu_btn.disabled = False
+                    self.root.ids.login_menu_btn.opacity = 1
+                mydb.commit()
+                self.message_output("Info", "API info has been saved.")
             else:
                 self.message_output("Error", "Missing Input.")
 
@@ -213,80 +292,75 @@ class MainApp(MDApp):
         """Request alias list from firewall and generates a list of aliases loads details screen when clicked."""
         a = f"{self.url}:{self.port}/api/firewall/alias/listNetworkAliases"
         check = self.url_request_post(a)
-        if check.status_code == 200:
-            alias = check.json()
-            for key, value in alias.items():
-                alias_item = OneLineListItem(
-                    text=str(value), on_release=lambda x: self.alias_details(x.text)
+        check = json.loads(check.text)
+        for k, v in check.items():
+            name = v['name'].split("__")
+            description = v['description']
+            if description == "":
+                description = "No description assigned."
+            if len(name) == 1:
+                alias_item = TwoLineListItem(
+                    text=f"Alias Name:      {v['name']}",
+                    secondary_text=f"Description:      {description}",
+                    on_release=lambda x: self.alias_details(x.text)
                 )
                 self.root.ids.aliasList.add_widget(alias_item)
 
     def alias_details(self, a):
         """Displays alias details screen, Name, and IP information. It also includes a text field for adding IP addresses."""
         self.root.ids.alias_ip_list.clear_widgets()
-        try:
-            check = self.url_request_get(self.list_aliases)
-            if check.status_code == 200:
-                alias_list = check.json()
-                for alias in alias_list["rows"]:
-                    if alias["name"] == a:
-                        a_name = str(alias["name"])
-                        a_ip = str(alias["content"])
-                        a_ip = a_ip.split(",")
-                        l_ip = str(alias["content"])
-                        a_uuid = str(alias["uuid"])
-                        self.root.ids.alias_details_name.text = a_name
-                        for i in a_ip:
-                            ip_list = OneLineListItem(
-                                text=i,
-                            )
-                            self.root.ids.alias_ip_list.add_widget(ip_list)
-                        add_button = MDFillRoundFlatButton(
-                            text="Add IP",
-                            pos_hint={"center_x": 0.8, "center_y": 0.3},
-                            on_release=lambda x: self.add_ip_to_alias(a_uuid, l_ip),
-                        )
-                        self.root.ids.details.add_widget(add_button)
-                    self.root.ids.screen_manager.current = "alias_details"
-        except requests.exceptions.ConnectionError:
-            self.connection_error()
-            pass
-        except requests.exceptions.Timeout:
-            self.connection_timeout()
-            pass
-        except requests.exceptions.InvalidSchema:
-            self.invalid_url()
-            pass
+        a = a.split(":")
+        a = a[1].strip()
+        check = self.url_request_get(self.list_aliases)
+        if check.status_code == 200:
+            alias_list = check.json()
+            for alias in alias_list["rows"]:
+                if alias["name"] == a:
+                    a_name = str(alias["name"])
+                    a_ip = str(alias["content"])
+                    a_ip = a_ip.split(",")
+                    l_ip = str(alias["content"])
+                    a_uuid = str(alias["uuid"])
+                    self.root.ids.alias_details_name.text = f"Alias:  {a_name}"
+                    self.root.ids.alias_uuid.text = a_uuid
+                    self.alias_ip_list(a_ip)
+                    add_button = MDFillRoundFlatButton(
+                        text="Add IP",
+                        pos_hint={"center_x": 0.8, "center_y": 0.3},
+                        on_release=lambda x: self.add_ip_to_alias(
+                            a_uuid, l_ip),
+                    )
+                    self.root.ids.details.add_widget(add_button)
+                self.root.ids.screen_manager.current = "alias_details"
+
+    def alias_ip_list(self, a_ip):
+        for i in a_ip:
+            ip_list = OneLineListItem(
+                text=i,
+                on_release=lambda x: self.delete_alias_clicked(x)
+            )
+            self.root.ids.alias_ip_list.add_widget(ip_list)
 
     def add_ip_to_alias(self, uuid, a_ip):
         """Builds the JSON payload required to post to add IP to the alias. Also sends post request, and returns
         then send a post request to reconfigure alias. Only one IP input is supported at the moment.
         """
-        # print(a_ip)
         new_ip = self.root.ids.ip_address.text.strip()
         new_ip = new_ip.split(",")
         alias_ip = re.sub("[,]", "\n", a_ip)
         for n in new_ip:
-            alias_ip = alias_ip + f"\n{n}"
+            alias_ip = f"{alias_ip}\n{n}"
         set_url = f"{self.url}:{self.port}/api/firewall/alias/setItem/{uuid}"
         check = self.url_request_get(
             f"{self.url}:{self.port}/api/firewall/alias/getItem/{uuid}"
         )
         slected_alias = check.json()
-
         alias_name = f'{str(slected_alias["alias"]["name"])}'
         payload = {
             "alias": {
-                "enabled": f'{str(slected_alias["alias"]["enabled"])}',
                 "name": f"{alias_name}",
-                "type": "host",
-                "proto": "",
-                "updatefreq": f'{str(slected_alias["alias"]["updatefreq"])}',
                 "content": f"{alias_ip}",
-                "counters": f'{str(slected_alias["alias"]["counters"])}',
-                "description": f'{str(slected_alias["alias"]["description"])}',
-            },
-            "network_content": "",
+            }
         }
         try:
             a = requests.post(
@@ -297,19 +371,69 @@ class MainApp(MDApp):
                 json=payload,
             )
             if a.status_code == 200:
-                # self.url_request_post(self.alias_reconfigure)
                 self.root.ids.ip_address.text = ""
-                self.message_output("Added", f"IP has been added to {alias_name}")
+                self.message_output(
+                    "Added", f"IP has been added to {alias_name}")
                 self.root.ids.screen_manager.current = "alias"
-        except requests.exceptions.ConnectionError:
+        except Exception as e:
             self.connection_error()
-            pass
-        except requests.exceptions.Timeout:
-            self.connection_timeout()
-            pass
-        except requests.exceptions.InvalidSchema:
-            self.invalid_url()
-            pass
+
+    def delete_alias_clicked(self, ip):
+        """Ask user if they want to delete an IP address from alias."""
+        self.dialog = MDDialog(
+            text=f"Delete {ip.text} from alias?",
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL",
+                    text_color=self.theme_cls.primary_color,
+                    on_release=self.close_dialog,
+                ),
+                MDFlatButton(
+                    text="DELETE",
+                    text_color=self.theme_cls.primary_color,
+                    on_release=lambda x: self.delete_alias_ip(
+                        self.dialog,
+                        ip,
+                    ),
+                ),
+            ],
+        )
+        self.dialog.open()
+
+    def delete_alias_ip(self, dialog, x):
+        """
+        Delete an IP from an alias.
+        """
+        dialog.dismiss()
+        ip_list = x.parent.children
+        new_list = []
+        uuid = self.root.ids.alias_uuid.text
+        a_name = self.root.ids.alias_details_name.text
+        set_url = f"{self.url}:{self.port}/api/firewall/alias/setItem/{uuid}"
+        for ip in ip_list:
+            if ip.text != x.text:
+                new_list.append(ip.text)
+            a_ip = new_list[0:]
+            a_ip = "\n".join(a_ip)
+        payload = {
+            "alias": {
+                "name": f"{a_name}",
+                "content": f"{a_ip}",
+            }
+        }
+        a = requests.post(
+            url=set_url,
+            timeout=10,
+            auth=(self.key, self.secret),
+            verify=False,
+            json=payload,
+        )
+        if a.status_code == 200:
+            self.root.ids.ip_address.text = ""
+            self.message_output(
+                "Added", f"{x.text} has been removed from alias: {a_name}")
+        self.root.ids.alias_ip_list.clear_widgets()
+        self.alias_ip_list(new_list)
 
     def arp_table_list(self):
         """API get request for the ARP table on the firewall. Then generates a scrollview list of device IPs, Hostname, and"""
@@ -330,9 +454,8 @@ class MainApp(MDApp):
             rules = TwoLineIconListItem(
                 text=r[1],
                 secondary_text=r[2],
-                on_release=lambda x: threading.Thread(
-                    target=self.rule_on_click, args=(x.secondary_text, x), daemon=True
-                ).start(),
+                on_release=lambda x: self.rule_on_click(
+                    x.secondary_text, x),
             )
             try:
                 check = self.url_request_get(self.rule)
@@ -340,11 +463,13 @@ class MainApp(MDApp):
                     check_rule = json.loads(check.text)
                     if check_rule["rule"]["enabled"] == "0":
                         rules.add_widget(
-                            IconLeftWidget(icon="checkbox-blank-circle-outline")
+                            IconLeftWidget(
+                                icon="checkbox-blank-circle-outline")
                         )
                     elif check_rule["rule"]["enabled"] == "1":
                         rules.add_widget(
-                            IconLeftWidget(icon="checkbox-marked-circle-outline")
+                            IconLeftWidget(
+                                icon="checkbox-marked-circle-outline")
                         )
                 else:
                     rules.add_widget(
@@ -354,19 +479,22 @@ class MainApp(MDApp):
 
             except requests.exceptions.ConnectionError:
                 self.connection_error()
-                rules.add_widget(IconLeftWidget(icon="checkbox-blank-circle-outline"))
+                rules.add_widget(IconLeftWidget(
+                    icon="checkbox-blank-circle-outline"))
                 self.root.ids.ruleList.add_widget(rules)
                 self.dialog.dismiss()
                 pass
             except requests.exceptions.Timeout:
                 self.connection_timeout()
-                rules.add_widget(IconLeftWidget(icon="checkbox-blank-circle-outline"))
+                rules.add_widget(IconLeftWidget(
+                    icon="checkbox-blank-circle-outline"))
                 self.root.ids.ruleList.add_widget(rules)
                 self.dialog.dismiss()
                 pass
             except requests.exceptions.InvalidSchema:
                 self.invalid_url()
-                rules.add_widget(IconLeftWidget(icon="checkbox-blank-circle-outline"))
+                rules.add_widget(IconLeftWidget(
+                    icon="checkbox-blank-circle-outline"))
                 self.root.ids.ruleList.add_widget(rules)
                 self.dialog.dismiss()
                 pass
@@ -380,9 +508,8 @@ class MainApp(MDApp):
             rules = TwoLineListItem(
                 text=r[1],
                 secondary_text=r[2],
-                on_release=lambda x: threading.Thread(
-                    target=self.delete_rule_clicked, args=(x.text,), daemon=True
-                ).start(),
+                on_release=lambda x: self.delete_rule_clicked(
+                    x.text,),
             )
             self.root.ids.ruleList_delete.add_widget(rules)
 
@@ -425,6 +552,8 @@ class MainApp(MDApp):
         )
         self.dialog.open()
         self.root.ids.ruleList.clear_widgets()
+        self.root.ids.ruleList_delete.clear_widgets()
+        self.delete_rule_list()
         self.rule_list()
         self.call_main_screen()
 
@@ -446,11 +575,13 @@ class MainApp(MDApp):
                     if check_rule["rule"]["enabled"] == "1":
                         new_icon = "checkbox-blank-circle-outline"
                         message = "Rule has been disabled."
-                        self.rule_state_change(f"{toggle}/0", new_icon, x, message)
+                        self.rule_state_change(
+                            f"{toggle}/0", new_icon, x, message)
                     else:
                         new_icon = "checkbox-marked-circle-outline"
                         message = "Rule has been enabled."
-                        self.rule_state_change(f"{toggle}/1", new_icon, x, message)
+                        self.rule_state_change(
+                            f"{toggle}/1", new_icon, x, message)
                 except TypeError:
                     self.message_output("Error", "Rule not found on Firewall")
             if check.status_code == 401:
@@ -576,6 +707,13 @@ class MainApp(MDApp):
                 pass
             except requests.exceptions.InvalidSchema:
                 pass
+
+    def ip_validator(self, ip):
+        """Validates IP addresses are valid."""
+        if iptools.ipv4.validate_ip(ip) is True or iptools.ipv6.validate_ip(ip) is True:
+            return True
+        else:
+            return False
 
     def wg_change_state(self, data, message):
         """Will either enable or disable wireguard VPN depending on current status provided by on_wg_active"""
