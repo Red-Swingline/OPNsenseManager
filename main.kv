@@ -1,23 +1,111 @@
+<ExtendedButton>
+    elevation: 3
+    -height: "56dp"
+
+<DrawerClickableItem@MDNavigationDrawerItem>
+    focus_color: "#e7e4c0"
+    unfocus_color: "#fffcf4"
 Screen:
     MDNavigationLayout:
         ScreenManager:
             id: screen_manager
-            Screen:
+            MDScreen :
+                name: "login"
+                MDAnchorLayout:       
+                    MD3Card :
+                        size_hint : None, None
+                        size : dp(320),dp(450)
+                        pos_hint : {"center_x":.5,"y":.5}
+                        elevation : 15
+                        padding : dp(20)
+                        spacing : dp(30)
+                        orientation : "vertical"
+                        Image:
+                            allow_stretch: True
+                            keep_ratio: True
+                            source: './images/logo.png'
+                        MDTextField :
+                            id: login_txt
+                            mode: "rectangle"
+                            write_tab: False
+                            multiline: False
+                            hint_text : "password"
+                            icon_right : "eye-off"
+                            size_hint_x : None
+                            width : dp(220)
+                            font_size : dp(20)
+                            pos_hint : {"center_x":.5}
+                            color_active : [1,1,1,1]
+                            password : True
+                        MDFillRoundFlatButton :
+                            text : 'LOGIN'
+                            pos_hint : {"center_x":.5}
+                            font_size : dp(15)
+                            on_press: app.login_check()
+                        Widget :
+                            size_hint_y : None
+                            height : dp(30)
+                    Widget:
+
+            MDScreen:
                 name:"rules"
                 MDBoxLayout:
-                    id: rule_list
-                    orientation: 'vertical'                   
+                    id: alias_list
+                    orientation: 'vertical'
                     MDTopAppBar:
-                        title: "Rule List"
+                        title: "Rules"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                    MDBoxLayout:
-                        orientation: 'vertical'
-                        padding: "10dp"
-                        ScrollView:
-                            MDList:
-                                id: ruleList
-            Screen:
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
+                    MDBottomNavigation:
+                        #panel_color: "#eeeaea"
+                        selected_color_background: "orange"
+                        text_color_active: "lightgrey"
+
+                        MDBottomNavigationItem:
+                            name: 'rule_list'
+                            text: 'Rule List'
+                            icon: 'clipboard-list-outline'
+                            
+                            ScrollView:
+                                MDList:
+                                    id: ruleList
+                            
+                        MDBottomNavigationItem:
+                            name: 'add_rule'
+                            text: 'Add Rules'
+                            icon: 'database-plus'
+                            MDFloatLayout:
+                                MDTextField:
+                                    id: rule_description
+                                    pos_hint: {'center_x': .5, 'center_y': .9}
+                                    size_hint_x: .5
+                                    mode: "rectangle"
+                                    hint_text: "Enter Description"
+                                    helper_text: "Description"
+                                    helper_text_mode: "on_focus"                   
+                                MDTextField:
+                                    id: rule_uuid
+                                    pos_hint: {'center_x': .5, 'center_y': .7}
+                                    size_hint_x: .5
+                                    mode: "rectangle"                           
+                                    hint_text: "Enter UUID"
+                                    helper_text: "UUID"
+                                    helper_text_mode: "on_focus"
+                                MDRaisedButton:
+                                    text: "Submit"
+                                    pos_hint: {'center_x': .7, 'center_y': .5}
+                                    elevation: 10
+                                    on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
+                        MDBottomNavigationItem:
+                            name: 'delete_rules'
+                            text: 'Delete Rules'
+                            icon: 'delete'
+                            ScrollView:
+                                MDList:
+                                    id: ruleList_delete
+
+            MDScreen:
                 name:"Connected_Devices"
                 MDBoxLayout:
                     id: connected_devices
@@ -26,45 +114,20 @@ Screen:
                         title: "Device List"
                         elevation: 10
                         left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                    MDBoxLayout:
-                        orientation: 'vertical'
+                    MDFloatLayout:
                         padding: "10dp"
                         ScrollView:
                             MDList:
                                 id: devicelist
-            Screen:
-                name: "add_rules"
-                MDBoxLayout:
-                    orientation: 'vertical'
-                    MDTopAppBar:
-                        title: "Add Rule"
-                        elevation: 10
-                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    MDTextField:
-                        id: rule_description
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .5
-                        mode: "rectangle"
-                        hint_text: "Enter Description"
-                        helper_text: "Description"
-                        helper_text_mode: "on_focus"                   
-                    MDTextField:
-                        id: rule_uuid
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .5
-                        mode: "rectangle"                           
-                        hint_text: "Enter UUID"
-                        helper_text: "UUID"
-                        helper_text_mode: "on_focus"
-                    MDRaisedButton:
-                        text: "Submit"
-                        pos_hint: {'center_x': .7, 'center_y': .5}
-                        elevation: 10
-                        on_press: app.add_rule_clicked(rule_description.text, rule_uuid.text)
-                    Widget:
-                Widget:   
-            Screen:
+                        MDFloatingActionButtonSpeedDial:
+                            id: check_arp
+                            elevation: 10
+                            state: 'open'
+                            data: app.arp_refersh
+                            root_button_anim: True
+                            pos_hint: {"center_x": .7, "center_y": .1}
+                            callback: app.arp_callbacks
+            MDScreen:
                 name: "vpn"
                 MDBoxLayout:
                     orientation: 'vertical'
@@ -81,7 +144,7 @@ Screen:
                         MDSwitch:
                             id: wg_switch
                             pos_hint: {'center_x': .8, 'center_y': .9}
-                            on_press: app.on_wg_active(*args)
+                            #on_press: app.on_wg_active(*args)
                         MDLabel:
                             id: wg_connection_status
                             text_size: self.width, None
@@ -90,39 +153,7 @@ Screen:
                             text: ""
                             #height: self.texture_size[1]
                         Widget:
-
-            Screen:
-                name: 'power'
-                MDBoxLayout:
-                    orientation: 'vertical'
-                    MDTopAppBar:
-                        title: "Power"
-                        elevation: 10
-                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    MDRelativeLayout
-                        MDFillRoundFlatButton:
-                            pos_hint:{'center_x':.2,'center_y':.9}
-                            text: "Reboot"
-                            on_release:
-                                app.reboot()
-            Screen:
-                name:"delete_rules"
-                MDBoxLayout:
-                    id: rule_list
-                    orientation: 'vertical'                   
-                    MDTopAppBar:
-                        title: "Delete Rules"
-                        elevation: 10
-                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    MDBoxLayout:
-                        orientation: 'vertical'
-                        padding: "10dp"
-                        ScrollView:
-                            MDList:
-                                id: ruleList_delete
-            Screen:
+            MDScreen:
                 name:"alias"
                 MDBoxLayout:
                     id: alias_list
@@ -138,7 +169,76 @@ Screen:
                         ScrollView:
                             MDList:
                                 id: aliasList
-            Screen:
+            MDScreen:
+                name:"settings"
+                MDBoxLayout:
+                    id: alias_list
+                    orientation: 'vertical'
+                    MDTopAppBar:
+                        title: "Settings"
+                        elevation: 10
+                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
+                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
+                    MDBottomNavigation:
+                        #panel_color: "#eeeaea"
+                        selected_color_background: "orange"
+                        text_color_active: "lightgrey"
+
+                        MDBottomNavigationItem:
+                            name: 'api_info'
+                            text: 'API'
+                            icon: 'clipboard-list-outline'
+                            
+                            MDFloatLayout:
+                                MDTextField:
+                                    id: api_key
+                                    pos_hint: {'center_x': .5, 'center_y': .9}
+                                    size_hint_x: .9
+                                    hint_text: "Enter API key"                  
+                                MDTextField:
+                                    id: api_secret
+                                    pos_hint: {'center_x': .5, 'center_y': .8}
+                                    size_hint_x: .9                          
+                                    hint_text: "Enter API secret"
+                                MDTextField:
+                                    id: api_url
+                                    pos_hint: {'center_x': .5, 'center_y': .7}
+                                    size_hint_x: .9                         
+                                    hint_text: "Enter URL or IP https://0.0.0.0"
+                                MDTextField:
+                                    id: url_port
+                                    pos_hint: {'center_x': .5, 'center_y': .6}
+                                    size_hint_x: .9                          
+                                    hint_text: "Enter Port Number"
+                                MDTextField:
+                                    id: password_txt
+                                    password: True
+                                    pos_hint: {'center_x': .5, 'center_y': .5}
+                                    size_hint_x: .9                          
+                                    hint_text: "Enter Optional Password"
+                                MDRaisedButton:
+                                    text: "Submit"
+                                    pos_hint: {'center_x': .7, 'center_y': .4}
+                                    elevation: 10
+                                    on_press: app.add_api_info(api_key.text, api_secret.text, api_url.text, url_port.text)
+
+                        MDBottomNavigationItem:
+                            name: 'Reboot'
+                            text: 'Reboot'
+                            icon: 'power'
+                            MDFloatLayout:
+                                MDLabel:
+                                    text: 'Reboot firewall:'
+                                    pos_hint: {'center_x': .2, 'center_y': .9}
+                                    bold: True
+                                    halign: 'center'
+
+                                MDFillRoundFlatButton:
+                                    pos_hint:{'center_x':.5,'center_y':.9}
+                                    text: "Reboot"
+                                    on_release:
+                                        app.reboot()
+            MDScreen:
                 name:"alias_details"
                 MDBoxLayout:
                     id:alias_list
@@ -147,122 +247,91 @@ Screen:
                         title: "Alias Details"
                         elevation: 10
                         right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    RelativeLayout:
+                    MDFloatLayout:
                         id:details
                         MDLabel:
-                            id:alias_details_name
+                            id:alias_uuid
                             pos_hint: {'x': .1, 'y': .4}
+                            opacity: 0
+                        MDLabel:
+                            id:alias_details_name
+                            pos_hint: {'center_x': .57, 'center_y': .9}
+                            bold: True
                             text: ""
                         MDTextField:
                             id: ip_address
-                            pos_hint: {'x': .1, 'y': .5}
-                            mode: "rectangle"
-                            width:500                    
+                            pos_hint: {'center_x': .5, 'center_y': .6}
+                            size_hint_x: .9                
                             hint_text: "Enter IP address(s) use , to separate IP addresses"
-                    FloatLayout:
-                        ScrollView:
-                            MDList:
-                                id: alias_ip_list
-
-
-            Screen:
-                name: "add_api_info"
-                MDBoxLayout:
-                    orientation: 'vertical'
-                    MDTopAppBar:
-                        title: "Add API Info"
-                        elevation: 10
-                        left_action_items: [['menu', lambda x: nav_drawer.set_state("open")]]
-                        right_action_items: [['arrow-left', lambda x: app.previous_screen()]]
-                    MDTextField:
-                        id: api_key
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9
-                        hint_text: "Enter API key"                  
-                    MDTextField:
-                        id: api_secret
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9                          
-                        hint_text: "Enter API secret"
-                    MDTextField:
-                        id: api_url
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9                         
-                        hint_text: "Enter URL or IP https://0.0.0.0"
-                    MDTextField:
-                        id: url_port
-                        pos_hint: {'center_x': .5, 'center_y': .5}
-                        size_hint_x: .9                          
-                        hint_text: "Enter Port Number"
-                    MDRaisedButton:
-                        text: "Submit"
-                        pos_hint: {'center_x': .7, 'center_y': .7}
-                        elevation: 10
-                        on_press: app.add_api_info(api_key.text, api_secret.text, api_url.text, url_port.text)
-                    Widget:
-                Widget:
+                    ScrollView:
+                        MDList:
+                            id: alias_ip_list
 
         MDNavigationDrawer:
             id: nav_drawer
-            MDBoxLayout:
-                orientation: 'vertical'
-                Image: 
-                    source: 'images/logo.png'
-                    elevation_normal: 10
-                MDList:
-                    OneLineAvatarIconListItem:
-                        text: 'Rule List'
+            radius: (0, 16, 16, 0)
+            md_bg_color: "#fffcf4"
+            elevation: 12
+            width: "240dp"
+
+            MDNavigationDrawerMenu:
+                MDBoxLayout:
+                    orientation: "vertical"
+                    adaptive_height: True
+                    spacing: "12dp"
+                    padding: 0, 0, 0, "12dp"
+
+                    MDIconButton:
+                        icon: "menu"
                         on_press: 
                             nav_drawer.set_state("close")
-                            screen_manager.current = 'rules'
-                        IconLeftWidget:
-                            icon: "clipboard-list-outline"
-                    OneLineAvatarIconListItem:
-                        text: 'Device List'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'Connected_Devices'
-                        IconLeftWidget:
-                            icon: "cellphone"                                 
-                    OneLineAvatarIconListItem:
-                        text: 'VPN'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'vpn'
-                        IconLeftWidget:
-                            icon: "vpn"  
-                    OneLineAvatarIconListItem:
-                        text: 'Power'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'power'
-                        IconLeftWidget:
-                            icon: "power"                         
-                    OneLineAvatarIconListItem:
-                        text: 'Add Rules'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'add_rules'
-                        IconLeftWidget:
-                            icon: "database-plus" 
-                    OneLineAvatarIconListItem:
-                        text: 'API Info'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'add_api_info'
-                        IconLeftWidget:
-                            icon: "api"                        
-                    OneLineAvatarIconListItem:
-                        text: 'Delete Rules'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'delete_rules'
-                        IconLeftWidget:
-                            icon: "delete"
-                    OneLineAvatarIconListItem:
-                        text: 'alias'
-                        on_press: 
-                            nav_drawer.set_state("close")
-                            screen_manager.current = 'alias'
-                        IconLeftWidget:
-                            icon: "application-cog"
+                DrawerClickableItem:
+                    id: rule_menu_btn
+                    text: "Rules"
+                    icon: "clipboard-list-outline"
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'rules'
+
+                DrawerClickableItem:
+                    id: devices_menu_btn
+                    text: "Device List"
+                    icon: "cellphone"
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'Connected_Devices'
+
+                DrawerClickableItem:
+                    id: vpn_menu_btn
+                    text: "VPN"
+                    icon: "vpn"
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'vpn'
+
+                DrawerClickableItem:
+                    id: alias_menu_btn
+                    text: "alias"
+                    icon: "application-cog"
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'alias'
+
+                DrawerClickableItem:
+                    id: settings_menu_btn
+                    text: "settings"
+                    icon: "cog"
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'settings'
+
+                DrawerClickableItem:
+                    id: login_menu_btn
+                    text: "Logout"
+                    icon: "logout"
+                    opacity: 0
+                    disabled: True
+                    on_press: 
+                        nav_drawer.set_state("close")
+                        screen_manager.current = 'login'
+                        app.logout()

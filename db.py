@@ -16,5 +16,6 @@ def create_tables():
     api_key TEXT NOT NULL UNIQUE,
     api_secret TEXT NOT NULL UNIQUE,
     url TEXT NOT NULL UNIQUE,
-    port INTEGER
+    port INTEGER,
+    password BLOB
     );""")
