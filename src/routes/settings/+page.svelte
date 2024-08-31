@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { invoke } from "@tauri-apps/api/core";
   import AppLayout from '../AppLayout.svelte';
-  import SettingsForm from '../SettingsForm.svelte';
-  import Login from '../Login.svelte';
+  import SettingsForm from '$lib/components/forms/SettingsForm.svelte';
+  import Login from '$lib/components/forms/Login.svelte';
   import { toasts } from '$lib/stores/toastStore';
   import { authStore } from '$lib/stores/authStore';
 
@@ -11,12 +11,21 @@
   let apiSecret = "";
   let apiUrl = "";
   let port = 443;
+  let pin = "";
   let currentPin = "";
   let newPin = "";
   let confirmNewPin = "";
   let activeTab: 'api' | 'pin' = 'api';
+  let isFirstRun = false;
 
   onMount(async () => {
+    if ($authStore.isLoggedIn) {
+      await loadApiInfo();
+    }
+    isFirstRun = await invoke<boolean>("check_first_run");
+  });
+
+  async function loadApiInfo() {
     try {
       const apiInfo = await invoke<{
         api_key: string;
@@ -34,12 +43,21 @@
       console.error("Failed to fetch API info:", error);
       toasts.error("Failed to load settings. Please try again.");
     }
-  });
+  }
 
-  async function handleApiSubmit() {
+  async function handleApiSubmit(event: CustomEvent<{apiKey: string, apiSecret: string, apiUrl: string, port: number, pin: string}>) {
+    const { apiKey, apiSecret, apiUrl, port, pin } = event.detail;
     try {
-      await invoke("update_api_info", { apiKey, apiSecret, apiUrl, port: Number(port) });
-      toasts.success("API information updated successfully!");
+      if (isFirstRun) {
+        await invoke("save_initial_config", { apiKey, apiSecret, apiUrl, port: Number(port), pin });
+        isFirstRun = false;
+        authStore.setConfigured(true);
+        toasts.success("Initial configuration saved successfully!");
+      } else {
+        await invoke("update_api_info", { apiKey, apiSecret, apiUrl, port: Number(port) });
+        toasts.success("API information updated successfully!");
+      }
+      await loadApiInfo(); // Reload API info to confirm update
     } catch (error) {
       console.error("Failed to update API info:", error);
       toasts.error("Failed to update API information. Please try again.");
@@ -76,46 +94,44 @@
   function setActiveTab(tab: 'api' | 'pin') {
     activeTab = tab;
   }
-
-  function handleKeydown(event: KeyboardEvent, tab: 'api' | 'pin') {
-    if (event.key === 'Enter' || event.key === ' ') {
-      setActiveTab(tab);
-    }
-  }
 </script>
 
-{#if $authStore.isLoggedIn}
+{#if $authStore.isLoggedIn || isFirstRun}
   <AppLayout>
     <div class="max-w-4xl mx-auto">
       <h2 class="text-2xl font-bold mb-6">Settings</h2>
       
-      <div class="tabs tabs-boxed mb-6">
-        <button 
-          type="button"
-          class="tab {activeTab === 'api' ? 'tab-active' : ''}" 
-          on:click={() => setActiveTab('api')}
-          on:keydown={(e) => handleKeydown(e, 'api')}
-        >
-          API Settings
-        </button>
-        <button 
-          type="button"
-          class="tab {activeTab === 'pin' ? 'tab-active' : ''}" 
-          on:click={() => setActiveTab('pin')}
-          on:keydown={(e) => handleKeydown(e, 'pin')}
-        >
-          Change PIN
-        </button>
-      </div>
+      {#if !isFirstRun}
+        <div class="tabs tabs-boxed mb-6">
+          <button 
+            type="button"
+            class="tab {activeTab === 'api' ? 'tab-active' : ''}" 
+            on:click={() => setActiveTab('api')}
+          >
+            API Settings
+          </button>
+          <button 
+            type="button"
+            class="tab {activeTab === 'pin' ? 'tab-active' : ''}" 
+            on:click={() => setActiveTab('pin')}
+          >
+            Change PIN
+          </button>
+        </div>
+      {/if}
 
-      {#if activeTab === 'api'}
+      {#if isFirstRun || activeTab === 'api'}
         <div class="bg-base-100 p-6 rounded-lg shadow-lg">
-          <h3 class="text-xl font-semibold mb-4">API Configuration</h3>
+          <h3 class="text-xl font-semibold mb-4">
+            {isFirstRun ? 'Initial Configuration' : 'API Configuration'}
+          </h3>
           <SettingsForm 
             {apiKey}
             {apiSecret}
             {apiUrl}
             {port}
+            {pin}
+            showPin={isFirstRun}
             on:submit={handleApiSubmit}
           />
         </div>

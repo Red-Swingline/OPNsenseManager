@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { invoke } from "@tauri-apps/api/core";
-  import Login from './Login.svelte';
+  import Login from '$lib/components/forms/Login.svelte';
   import AppLayout from './AppLayout.svelte';
-  import SettingsForm from './SettingsForm.svelte';
+  import InitialSetupForm from '$lib/components/forms/InitialSetupForm.svelte';
   import { toasts } from '$lib/stores/toastStore';
   import { authStore } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
@@ -13,8 +13,7 @@
 
   onMount(async () => {
     try {
-      console.log("Checking if first run...");
-      isFirstRun = await invoke("check_first_run");
+      isFirstRun = await invoke<boolean>("check_first_run");
       console.log("Is first run:", isFirstRun);
       
       if (!isFirstRun) {
@@ -28,26 +27,16 @@
     }
   });
 
-  async function handleSubmit(event: CustomEvent) {
-    console.log("Main - handleSubmit called");
-    console.log("Main - event object:", event);
-    console.log("Main - event.detail:", event.detail);
-
+  async function handleInitialSetup(event: CustomEvent<{apiKey: string, apiSecret: string, apiUrl: string, port: number, pin: string}>) {
     const { apiKey, apiSecret, apiUrl, port, pin } = event.detail;
-    console.log("Main - Extracted form data:", { apiKey, apiSecret, apiUrl, port, pin });
+    console.log("Saving initial config...");
 
-    if (!/^\d+$/.test(pin)) {
-      toasts.error("PIN must contain only numbers.");
-      return;
-    }
-    
     try {
-      console.log("Saving initial config...");
       await invoke("save_initial_config", { 
         apiKey, 
         apiSecret, 
         apiUrl, 
-        port: Number(port),
+        port,
         pin 
       });
       
@@ -62,8 +51,7 @@
     }
   }
 
-  function handleFormError(event: CustomEvent) {
-    console.log("Main - handleFormError called with message:", event.detail.message);
+  function handleFormError(event: CustomEvent<{message: string}>) {
     toasts.error(event.detail.message);
   }
 
@@ -80,15 +68,15 @@
     </div>
   </div>
 {:else if isFirstRun}
-  <div class="hero min-h-screen bg-base-200">
-    <div class="hero-content flex-col lg:flex-row-reverse">
-      <div class="text-center lg:text-left">
-        <h1 class="text-5xl font-bold">Welcome to OPNsense Manager</h1>
-        <p class="py-6">Please enter your API information and create a PIN to get started.</p>
+  <div class="min-h-screen bg-base-200 p-4">
+    <div class="max-w-md mx-auto space-y-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold mb-2">Welcome to OPNsense Manager</h1>
+        <p class="text-base-content">Please enter your API information and create a PIN to get started.</p>
       </div>
-      <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-        <SettingsForm 
-          on:submit={handleSubmit}
+      <div class="card bg-base-100 shadow-xl">
+        <InitialSetupForm 
+          on:submit={handleInitialSetup}
           on:error={handleFormError}
         />
       </div>
@@ -98,7 +86,7 @@
   <Login on:login={handleLogin} />
 {:else}
   <AppLayout>
-    <div class="text-center">
+    <div class="text-center p-4">
       <h2 class="text-2xl font-bold mb-4">Welcome to OPNsense Manager</h2>
       <p class="text-base-content">This is the main interface of OPNsense Manager. Add your content here.</p>
     </div>
