@@ -2,7 +2,7 @@ use log::{error, info};
 use reqwest::{header::{HeaderMap, AUTHORIZATION}, Client, Response};
 use serde_json::Value;
 use std::time::Duration;
-use base64;
+use base64::{Engine as _, engine::general_purpose};
 
 pub async fn make_http_request(
     request_type: &str,
@@ -42,7 +42,7 @@ pub async fn make_http_request(
     };
 
     if let (Some(key), Some(secret)) = (api_key, api_secret) {
-        let auth = base64::encode(format!("{}:{}", key, secret));
+        let auth = general_purpose::STANDARD.encode(format!("{}:{}", key, secret));
         request_builder = request_builder.header(AUTHORIZATION, format!("Basic {}", auth));
     }
 

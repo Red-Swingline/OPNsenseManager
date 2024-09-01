@@ -1,11 +1,19 @@
 <script lang="ts">
-  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch } from '@mdi/js';
+  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch, mdiWallFire } from '@mdi/js';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/authStore';
   import { page } from '$app/stores';
   
   export let title = 'OPNsense Manager';
   let isSidebarOpen = false;
+
+  const menuItems = [
+    { path: '/', icon: mdiHome, label: 'Home' },
+    { path: '/devices', icon: mdiRouter, label: 'Devices' },
+    { path: '/alias', icon: mdiShieldSearch, label: 'Alias' },
+    { path: '/rules', icon: mdiWallFire, label: 'Firewall Rules' },
+    { path: '/settings', icon: mdiCog, label: 'Settings' },
+  ];
 
   function toggleSidebar() {
     isSidebarOpen = !isSidebarOpen;
@@ -45,38 +53,20 @@
     </div>
     <nav class="flex-1 overflow-y-auto">
       <ul class="p-2 space-y-2">
-        <li>
-          <button on:click={() => handleNavigation('/')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-              <path fill="currentColor" d={mdiHome} />
-            </svg>
-            <span>Home</span>
-          </button>
-        </li>
-        <li>
-          <button on:click={() => handleNavigation('/devices')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-              <path fill="currentColor" d={mdiRouter} />
-            </svg>
-            <span>Devices</span>
-          </button>
-        </li>
-        <li>
-          <button on:click={() => handleNavigation('/alias')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-              <path fill="currentColor" d={mdiShieldSearch} />
-            </svg>
-            <span>Alias</span>
-          </button>
-        </li>
-        <li>
-          <button on:click={() => handleNavigation('/settings')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-              <path fill="currentColor" d={mdiCog} />
-            </svg>
-            <span>Settings</span>
-          </button>
-        </li>
+        {#each menuItems as item}
+          <li>
+            <button 
+              on:click={() => handleNavigation(item.path)} 
+              class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200"
+              class:bg-base-300={$page.url.pathname === item.path}
+            >
+              <svg class="w-6 h-6" viewBox="0 0 24 24">
+                <path fill="currentColor" d={item.icon} />
+              </svg>
+              <span>{item.label}</span>
+            </button>
+          </li>
+        {/each}
         <li>
           <button on:click={handleLogout} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
             <svg class="w-6 h-6" viewBox="0 0 24 24">
@@ -137,38 +127,20 @@
       </div>
       <nav class="mt-5">
         <ul class="p-2 space-y-2">
-          <li>
-            <button on:click={() => handleNavigation('/')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-              <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d={mdiHome} />
-              </svg>
-              <span>Home</span>
-            </button>
-          </li>
-          <li>
-            <button on:click={() => handleNavigation('/devices')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-              <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d={mdiRouter} />
-              </svg>
-              <span>Devices</span>
-            </button>
-          </li>
-          <li>
-            <button on:click={() => handleNavigation('/alias')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-              <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d={mdiShieldSearch} />
-              </svg>
-              <span>Alias</span>
-            </button>
-          </li>
-          <li>
-            <button on:click={() => handleNavigation('/settings')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
-              <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d={mdiCog} />
-              </svg>
-              <span>Settings</span>
-            </button>
-          </li>
+          {#each menuItems as item}
+            <li>
+              <button 
+                on:click={() => handleNavigation(item.path)} 
+                class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200"
+                class:bg-base-300={$page.url.pathname === item.path}
+              >
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                  <path fill="currentColor" d={item.icon} />
+                </svg>
+                <span>{item.label}</span>
+              </button>
+            </li>
+          {/each}
           <li>
             <button on:click={handleLogout} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
               <svg class="w-6 h-6" viewBox="0 0 24 24">

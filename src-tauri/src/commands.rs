@@ -1,4 +1,3 @@
-use log::info;
 use tauri::State;
 use crate::db::{Database, ApiInfo};
 use crate::http_client::make_http_request;
@@ -38,7 +37,6 @@ pub fn save_initial_config(
     pin: String,
     database: State<Database>
 ) -> Result<(), String> {
-    // Hash the PIN
     let password_hash = Database::hash_password(&pin)
         .map_err(|e| e.to_string())?;
 
@@ -53,7 +51,6 @@ pub fn save_initial_config(
     database.save_api_info(&api_info)
         .map_err(|e| e.to_string())?;
 
-    // Set that the app has run for the first time
     database.set_has_run()
         .map_err(|e| e.to_string())
 }
@@ -93,18 +90,15 @@ pub fn update_api_info(
 
 #[tauri::command]
 pub fn update_pin(current_pin: String, new_pin: String, confirm_new_pin: String, database: State<Database>) -> Result<(), String> {
-    // Verify the current PIN
     if !database.verify_pin(&current_pin)
         .map_err(|e| format!("Failed to verify current PIN: {}", e))? {
         return Err("Current PIN is incorrect".to_string());
     }
 
-    // Check if new PIN matches the confirmation
     if new_pin != confirm_new_pin {
         return Err("New PIN and confirmation do not match".to_string());
     }
 
-    // Hash the new PIN
     let password_hash = Database::hash_password(&new_pin)
         .map_err(|e| e.to_string())?;
 

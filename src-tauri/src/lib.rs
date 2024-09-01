@@ -3,6 +3,8 @@ mod commands;
 mod http_client;
 mod devices;
 mod alias;
+mod dashboard;
+mod firewall;
 
 use db::Database;
 use tauri::Manager;
@@ -31,6 +33,12 @@ pub fn run() {
             alias::add_ip_to_alias,
             alias::get_alias,
             alias::search_alias_items,
+            dashboard::get_gateway_status,  
+            dashboard::get_services,    
+            dashboard::restart_service,
+            firewall::get_firewall_rules,
+            firewall::toggle_firewall_rule,  
+            firewall::apply_firewall_changes,
 
             ])
         .run(tauri::generate_context!())

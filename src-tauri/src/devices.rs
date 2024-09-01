@@ -1,14 +1,34 @@
+use serde::{Serialize, Deserialize};
 use tauri::State;
-use serde_json::Value;
 use crate::db::Database;
 use crate::http_client::make_http_request;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Device {
+    mac: String,
+    ip: String,
+    intf: String,
+    expired: bool,
+    expires: i32,
+    permanent: bool,
+    #[serde(rename = "type")]
+    device_type: String,
+    manufacturer: String,
+    hostname: String,
+    intf_description: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FlushArpResponse {
+    deleted: Vec<String>,
+}
 
 fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
     format!("{}:{}{}", api_info.api_url, api_info.port, endpoint)
 }
 
 #[tauri::command]
-pub async fn get_devices(database: State<'_, Database>) -> Result<Value, String> {
+pub async fn get_devices(database: State<'_, Database>) -> Result<Vec<Device>, String> {
     let api_info = database.get_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
@@ -26,12 +46,12 @@ pub async fn get_devices(database: State<'_, Database>) -> Result<Value, String>
     )
     .await?;
 
-    response.json::<Value>().await
+    response.json::<Vec<Device>>().await
         .map_err(|e| format!("Failed to parse response: {}", e))
 }
 
 #[tauri::command]
-pub async fn flush_arp_table(database: State<'_, Database>) -> Result<Value, String> {
+pub async fn flush_arp_table(database: State<'_, Database>) -> Result<FlushArpResponse, String> {
     let api_info = database.get_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
@@ -49,6 +69,14 @@ pub async fn flush_arp_table(database: State<'_, Database>) -> Result<Value, Str
     )
     .await?;
 
-    response.json::<Value>().await
-        .map_err(|e| format!("Failed to parse response: {}", e))
+    let body = response.text().await
+        .map_err(|e| format!("Failed to get response body: {}", e))?;
+
+    let deleted: Vec<String> = body
+        .lines()
+        .map(|line| line.split_whitespace().next().unwrap_or("").to_string())
+        .filter(|ip| !ip.is_empty())
+        .collect();
+
+    Ok(FlushArpResponse { deleted })
 }
