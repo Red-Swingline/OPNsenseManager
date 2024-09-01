@@ -5,6 +5,7 @@ mod devices;
 mod alias;
 mod dashboard;
 mod firewall;
+mod power;
 
 use db::Database;
 use tauri::Manager;
@@ -39,6 +40,7 @@ pub fn run() {
             firewall::get_firewall_rules,
             firewall::toggle_firewall_rule,  
             firewall::apply_firewall_changes,
+            power::reboot_firewall,
 
             ])
         .run(tauri::generate_context!())

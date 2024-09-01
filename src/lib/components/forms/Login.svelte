@@ -16,7 +16,6 @@
     try {
       const result = await invoke("verify_pin", { pin });
       if (result) {
-        toasts.success("Login successful!");
         dispatch('login');
       } else {
         toasts.error("Invalid PIN. Please try again.");

@@ -36,7 +36,6 @@
     try {
       devices = await invoke("get_devices");
       applyFilters();
-      toasts.success("Devices fetched successfully");
     } catch (error) {
       console.error("Failed to fetch devices:", error);
       toasts.error("Failed to fetch devices. Please try again.");

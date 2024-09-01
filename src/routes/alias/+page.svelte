@@ -97,7 +97,6 @@
       }
 
       applyFilter();
-      toasts.success("Aliases fetched successfully");
     } catch (err) {
       console.error("Failed to fetch aliases:", err);
       error =
