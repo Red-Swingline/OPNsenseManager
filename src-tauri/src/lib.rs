@@ -2,6 +2,7 @@ mod db;
 mod commands;
 mod http_client;
 mod devices;
+mod alias;
 
 use db::Database;
 use tauri::Manager;
@@ -25,6 +26,12 @@ pub fn run() {
             devices::get_devices,
             devices::flush_arp_table,
             commands::get_vendor_info,
+            alias::list_network_aliases,
+            alias::remove_ip_from_alias,
+            alias::add_ip_to_alias,
+            alias::get_alias,
+            alias::search_alias_items,
+
             ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

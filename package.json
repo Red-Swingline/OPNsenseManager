@@ -16,6 +16,7 @@
     "@mdi/js": "^7.4.47",
     "@tauri-apps/api": ">=2.0.0-rc.0",
     "@tauri-apps/plugin-shell": ">=2.0.0-rc.0",
+    "lodash-es": "^4.17.21",
     "svelte-table": "^0.6.3"
   },
   "devDependencies": {
@@ -23,6 +24,7 @@
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
     "@tauri-apps/cli": ">=2.0.0-rc.0",
+    "@types/lodash-es": "^4.17.12",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.10",
     "postcss": "^8.4.41",

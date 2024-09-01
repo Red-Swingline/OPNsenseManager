@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter } from '@mdi/js';
+  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch } from '@mdi/js';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/authStore';
   import { page } from '$app/stores';
@@ -59,6 +59,14 @@
               <path fill="currentColor" d={mdiRouter} />
             </svg>
             <span>Devices</span>
+          </button>
+        </li>
+        <li>
+          <button on:click={() => handleNavigation('/alias')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
+            <svg class="w-6 h-6" viewBox="0 0 24 24">
+              <path fill="currentColor" d={mdiShieldSearch} />
+            </svg>
+            <span>Alias</span>
           </button>
         </li>
         <li>
@@ -143,6 +151,14 @@
                 <path fill="currentColor" d={mdiRouter} />
               </svg>
               <span>Devices</span>
+            </button>
+          </li>
+          <li>
+            <button on:click={() => handleNavigation('/alias')} class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-base-200 transition-colors duration-200">
+              <svg class="w-6 h-6" viewBox="0 0 24 24">
+                <path fill="currentColor" d={mdiShieldSearch} />
+              </svg>
+              <span>Alias</span>
             </button>
           </li>
           <li>

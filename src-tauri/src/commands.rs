@@ -1,3 +1,4 @@
+use log::info;
 use tauri::State;
 use crate::db::{Database, ApiInfo};
 use crate::http_client::make_http_request;
