@@ -1,7 +1,8 @@
+use serde::Deserialize;
 use tauri::State;
 use crate::db::{Database, ApiInfo};
 use crate::http_client::make_http_request;
-
+use log::{info, error};
 
 #[tauri::command]
 pub async fn get_vendor_info(mac: String) -> Result<String, String> {
@@ -28,31 +29,67 @@ pub fn check_first_run(database: State<Database>) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-pub fn save_initial_config(
+#[derive(Deserialize)]
+pub struct InitialConfig {
+    profile_name: String,
     api_key: String,
     api_secret: String,
     api_url: String,
     port: u16,
     pin: String,
-    database: State<Database>
-) -> Result<(), String> {
-    let password_hash = Database::hash_password(&pin)
-        .map_err(|e| e.to_string())?;
+}
 
+#[tauri::command]
+pub async fn save_initial_config(
+    config: InitialConfig,
+    database: State<'_, Database>
+) -> Result<(), String> {
+    info!("Starting save_initial_config");
+
+    info!("Hashing password");
+    let password_hash = Database::hash_password(&config.pin)
+        .map_err(|e| {
+            error!("Failed to hash password: {}", e);
+            format!("Failed to hash password: {}", e)
+        })?;
+
+    info!("Updating password hash");
+    database.update_password_hash(&password_hash)
+        .map_err(|e| {
+            error!("Failed to save password hash: {}", e);
+            format!("Failed to save password hash: {}", e)
+        })?;
+
+    info!("Creating ApiInfo");
     let api_info = ApiInfo {
-        api_key,
-        api_secret,
-        api_url,
-        port,
-        password_hash,
+        id: 0, 
+        profile_name: config.profile_name,
+        api_key: config.api_key,
+        api_secret: config.api_secret,
+        api_url: config.api_url,
+        port: config.port,
+        is_default: true, 
     };
 
+    info!("Saving API info");
     database.save_api_info(&api_info)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            error!("Failed to save API info: {}", e);
+            format!("Failed to save API info: {}", e)
+        })?;
 
+    info!("API info saved successfully");
+
+    info!("Setting has_run flag");
     database.set_has_run()
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            error!("Failed to set has_run flag: {}", e);
+            format!("Failed to set has_run flag: {}", e)
+        })?;
+
+    info!("Has_run flag set successfully");
+    info!("save_initial_config completed successfully");
+    Ok(())
 }
 
 #[tauri::command]
@@ -63,29 +100,45 @@ pub fn verify_pin(pin: String, database: State<Database>) -> Result<bool, String
 
 #[tauri::command]
 pub fn get_api_info(database: State<Database>) -> Result<Option<ApiInfo>, String> {
-    database.get_api_info()
+    database.get_default_api_info()
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
+pub fn get_api_profiles(database: State<Database>) -> Result<Vec<ApiInfo>, String> {
+    database.list_api_profiles()
+        .map_err(|e| format!("Failed to get API profiles: {}", e))
+}
+
+#[tauri::command]
 pub fn update_api_info(
+    profile_name: String,
     api_key: String,
     api_secret: String,
     api_url: String,
     port: u16,
+    is_default: bool,
     database: State<Database>
 ) -> Result<(), String> {
-    let mut api_info = database.get_api_info()
+    let mut api_info = database.get_api_info(Some(&profile_name))
         .map_err(|e| e.to_string())?
-        .ok_or_else(|| "API info not found".to_string())?;
+        .ok_or_else(|| format!("API profile '{}' not found", profile_name))?;
 
     api_info.api_key = api_key;
     api_info.api_secret = api_secret;
     api_info.api_url = api_url;
     api_info.port = port;
+    api_info.is_default = is_default;
 
     database.save_api_info(&api_info)
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    if is_default {
+        database.set_default_profile(&profile_name)
+            .map_err(|e| format!("Failed to set default profile: {}", e))?;
+    }
+
+    Ok(())
 }
 
 #[tauri::command]

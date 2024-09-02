@@ -1,6 +1,6 @@
 {
   "productName": "opnsensemanager",
-  "version": "0.1.0",
+  "version": "3.0.0",
   "identifier": "com.opnsensemanager.app",
   "build": {
     "beforeDevCommand": "npm run dev",

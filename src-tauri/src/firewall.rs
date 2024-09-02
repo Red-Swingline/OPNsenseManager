@@ -37,7 +37,7 @@ fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
 
 #[tauri::command]
 pub async fn get_firewall_rules(database: State<'_, Database>) -> Result<FirewallRulesResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -67,7 +67,7 @@ pub async fn get_firewall_rules(database: State<'_, Database>) -> Result<Firewal
 
 #[tauri::command]
 pub async fn toggle_firewall_rule(database: State<'_, Database>, uuid: String) -> Result<ToggleRuleResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -90,7 +90,7 @@ pub async fn toggle_firewall_rule(database: State<'_, Database>, uuid: String) -
 
 #[tauri::command]
 pub async fn apply_firewall_changes(database: State<'_, Database>) -> Result<ApplyResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 

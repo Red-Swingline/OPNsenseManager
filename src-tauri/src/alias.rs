@@ -10,7 +10,7 @@ fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
 
 #[tauri::command]
 pub async fn list_network_aliases(database: State<'_, Database>) -> Result<Value, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -44,7 +44,7 @@ pub async fn get_alias(database: State<'_, Database>, alias_name: String) -> Res
 
 #[tauri::command]
 pub async fn add_ip_to_alias(database: State<'_, Database>, uuid: String, current_content: String, new_ip: String) -> Result<(), String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -88,7 +88,7 @@ pub async fn add_ip_to_alias(database: State<'_, Database>, uuid: String, curren
 
 #[tauri::command]
 pub async fn remove_ip_from_alias(database: State<'_, Database>, uuid: String, current_content: String) -> Result<(), String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -143,7 +143,7 @@ async fn get_alias_info(api_info: &crate::db::ApiInfo, uuid: &str) -> Result<Val
 
 #[tauri::command]
 pub async fn search_alias_items(database: State<'_, Database>) -> Result<Value, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 

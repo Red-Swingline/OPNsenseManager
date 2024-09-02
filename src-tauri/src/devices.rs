@@ -29,7 +29,7 @@ fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
 
 #[tauri::command]
 pub async fn get_devices(database: State<'_, Database>) -> Result<Vec<Device>, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -52,7 +52,7 @@ pub async fn get_devices(database: State<'_, Database>) -> Result<Vec<Device>, S
 
 #[tauri::command]
 pub async fn flush_arp_table(database: State<'_, Database>) -> Result<FlushArpResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 

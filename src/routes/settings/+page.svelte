@@ -57,7 +57,7 @@
         await invoke("update_api_info", { apiKey, apiSecret, apiUrl, port: Number(port) });
         toasts.success("API information updated successfully!");
       }
-      await loadApiInfo(); // Reload API info to confirm update
+      await loadApiInfo();
     } catch (error) {
       console.error("Failed to update API info:", error);
       toasts.error("Failed to update API information. Please try again.");

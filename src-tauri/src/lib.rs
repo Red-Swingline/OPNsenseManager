@@ -14,6 +14,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_log::Builder::new().build())
         .setup(|app| {
             let db = Database::new(app.handle()).expect("Failed to initialize database");
             app.manage(db);
@@ -25,10 +26,11 @@ pub fn run() {
             commands::verify_pin, 
             commands::get_api_info, 
             commands::update_api_info,
+            commands::get_api_profiles,
             commands::update_pin,
+            commands::get_vendor_info,
             devices::get_devices,
             devices::flush_arp_table,
-            commands::get_vendor_info,
             alias::list_network_aliases,
             alias::remove_ip_from_alias,
             alias::add_ip_to_alias,
