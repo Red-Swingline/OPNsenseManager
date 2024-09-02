@@ -23,7 +23,9 @@ This application is tailored for clients who require a simplified interface for 
 4. Once set up, you can log in and start managing your OPNsense firewall.
 
 ## Security Note
+
 **WARNING:** Never share your API keys with anyone. 
+
 This application uses API access to interact with your OPNsense firewall. Ensure that you're using a dedicated API key with appropriate permissions for security best practices.
 
 Recommended minimum API permissions to use the current version fo the app
