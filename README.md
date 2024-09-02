@@ -7,7 +7,7 @@ OPNsense Manager is a streamlined, user-friendly application designed to simplif
 - **Dashboard**: Get a quick overview of your OPNsense system's status, including gateway information and service status.
 - **Device Management**: View devices on your network, including the ability to flush the ARP table.
 - **Firewall Rules**: Enable and disable firewall rules created with the firewall automation plugin. 
-    - https://docs.opnsense.org/development/api/plugins/firewall.html
+    - https://docs.opnsense.org/development/api/core/firewall.html
 - **Alias Management**: Easily view, add, and remove IP addresses from firewall aliases.
 - **Simple Settings**: Configure API access and update security PIN with a straightforward interface.
 
