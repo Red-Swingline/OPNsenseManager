@@ -36,6 +36,18 @@ If you find this application useful, consider supporting its development:
     </a>
 </div>
 
+
+
 ## Feedback and Contributions
 
 Your feedback and contributions are welcome! Please open an issue or submit a pull request on our GitHub repository.
+
+
+## Screenshots
+
+|  ![Screenshot 1](https://github.com/user-attachments/assets/4a3f55d2-88e1-4ab5-870e-3c843659129b)  | ![Screenshot 2](https://github.com/user-attachments/assets/64224b48-17b2-4acb-acbf-d7e8115436fb) | ![Screenshot 3](https://github.com/user-attachments/assets/c7129725-b9cc-400c-bfdf-c56df1a28284) |
+|---|---|---|
+| ![Screenshot 4](https://github.com/user-attachments/assets/36f17388-6053-4b43-9dda-5221ba607b5b) | ![Screenshot 5](https://github.com/user-attachments/assets/44fbd91e-9619-4f3a-81a6-115efca856be) | ![Screenshot 6](https://github.com/user-attachments/assets/358dab68-280c-48de-bd33-0ed9b5a02643) |
+| ![Screenshot 7](https://github.com/user-attachments/assets/fa9dfa64-b79d-46bb-962b-d91a2f12dfff) | ![Screenshot 8](https://github.com/user-attachments/assets/a6045ee6-7bc3-4062-9e40-1a78d55ed900) | ![Screenshot 9](https://github.com/user-attachments/assets/abfa9c49-daed-4458-9abe-9d5a23b2a328) |
+| ![Screenshot 10](https://github.com/user-attachments/assets/9b0bf147-6883-4c5a-9891-79fded253762) | ![Screenshot 11](https://github.com/user-attachments/assets/4330a3cd-ab23-40a4-93fb-d5e7c08c98dd) | |
+
