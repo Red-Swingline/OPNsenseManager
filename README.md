@@ -1,6 +1,6 @@
 # OPNsense Manager
 
-OPNsense Manager is a streamlined, user-friendly application designed to simplify the management of OPNsense firewalls. Built with Tauri and SvelteKit, this cross-platform app provides an intuitive interface for users who need a more simplifed alternative to the standard OPNsense web interface.
+OPNsense Manager is a streamlined, user-friendly application designed to simplify the management of OPNsense firewalls. Built with Tauri and SvelteKit, this cross-platform app provides an intuitive interface for users who need a more simplified alternative to the standard OPNsense web interface.
 
 ## Features
 
