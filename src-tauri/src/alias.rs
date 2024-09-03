@@ -42,7 +42,7 @@ pub async fn get_alias(database: State<'_, Database>, alias_name: String) -> Res
     Ok(alias.clone())
 }
 #[tauri::command]
-pub async fn add_ip_to_alias(database: State<'_, Database>, uuid: String, current_content: String, new_ip: String) -> Result<(), String> {
+pub async fn add_ip_to_alias(database: State<'_, Database>, uuid: String, current_content: String, _new_ip: String) -> Result<(), String> {
     let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;

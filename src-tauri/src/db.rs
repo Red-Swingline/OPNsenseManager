@@ -294,7 +294,8 @@ impl Database {
         Ok(())
     }
 
-    fn ensure_default_profile(&self) -> Result<()> {
+    // TODO depricate this 
+    fn _ensure_default_profile(&self) -> Result<()> {
         let conn = self.conn.lock().unwrap();
         let default_exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM api_info WHERE is_default = 1)", [], |row| row.get(0))?;
         
