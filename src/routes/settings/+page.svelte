@@ -60,7 +60,6 @@
       await loadApiInfo();
     } catch (error) {
       console.error("Failed to update API info:", error);
-      toasts.error("Failed to update API information. Please try again.");
     }
   }
 

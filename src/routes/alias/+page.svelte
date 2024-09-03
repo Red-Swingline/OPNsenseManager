@@ -54,48 +54,46 @@
   });
 
   async function fetchAliasesAndDetails(): Promise<void> {
-    isLoading = true;
-    error = null;
-    try {
-      const detailsResult = await invoke<AliasItemsResponse>("search_alias_items");
+  isLoading = true;
+  error = null;
+  try {
+    const detailsResult = await invoke<AliasItemsResponse>("search_alias_items");
 
-      console.log(
-        "Full JSON result from search_alias_items:",
-        JSON.stringify(detailsResult, null, 2),
-      );
+    console.log(
+      "Full JSON result from search_alias_items:",
+      JSON.stringify(detailsResult, null, 2)
+    );
 
-      if (detailsResult && detailsResult.rows) {
-        aliases = detailsResult.rows.reduce((acc, item) => {
-          if (!item.name.startsWith("bogons") && !item.name.startsWith("__") && !item.name.startsWith("virusprot") && !item.name.startsWith("sshlockout")) {
-            acc[item.name] = {
-              name: item.name,
-              description: item.description,
-            };
-          }
-          return acc;
-        }, {} as Record<string, Alias>);
+    if (detailsResult && detailsResult.rows) {
+      const excludedPrefixes = ['bogons', '__', 'virusprot', 'sshlockout'];
+      
+      aliases = {};
+      aliasDetails = {};
 
-        aliasDetails = detailsResult.rows.reduce((acc, item) => {
-          if (!item.name.startsWith("__")) {
-            acc[item.name] = item;
-          }
-          return acc;
-        }, {} as Record<string, AliasDetails>);
+      detailsResult.rows.forEach(item => {
+        if (!excludedPrefixes.some(prefix => item.name.startsWith(prefix))) {
+          aliases[item.name] = {
+            name: item.name,
+            description: item.description,
+          };
+          aliasDetails[item.name] = item;
+        }
+      });
 
-        console.log("Processed aliasDetails:", JSON.stringify(aliasDetails, null, 2));
-      } else {
-        throw new Error("Invalid response from search_alias_items");
-      }
-
-      applyFilter();
-    } catch (err) {
-      console.error("Failed to fetch aliases:", err);
-      error = err instanceof Error ? err.message : "An unexpected error occurred";
-      toasts.error(`Failed to fetch aliases: ${error}`);
-    } finally {
-      isLoading = false;
+      console.log("Processed aliasDetails:", JSON.stringify(aliasDetails, null, 2));
+    } else {
+      throw new Error("Invalid response from search_alias_items");
     }
+
+    applyFilter();
+  } catch (err) {
+    console.error("Failed to fetch aliases:", err);
+    error = err instanceof Error ? err.message : "An unexpected error occurred";
+    toasts.error(`Failed to fetch aliases: ${error}`);
+  } finally {
+    isLoading = false;
   }
+}
 
   function applyFilter(): void {
     filteredAliases = Object.fromEntries(
