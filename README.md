@@ -35,7 +35,7 @@ Recommended minimum API permissions to use the current version fo the app
 | GUI  | Diagnostics: ARP Table      |
 | GUI  | Diagnostics: Reboot System  |
 | GUI  | Firewall: Alias: Edit       |
-| GUI  | Firewall: Automation: Filter       |
+| GUI  | Firewall: Automation: Filter|
 | GUI  | Status: Services            |
 
 
