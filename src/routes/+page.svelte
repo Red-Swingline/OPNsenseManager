@@ -1,13 +1,19 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
-  import Login from '$lib/components/forms/Login.svelte';
-  import AppLayout from './AppLayout.svelte';
-  import InitialSetupForm from '$lib/components/forms/InitialSetupForm.svelte';
-  import { toasts } from '$lib/stores/toastStore';
-  import { authStore } from '$lib/stores/authStore';
-  import { goto } from '$app/navigation';
-  import { mdiArrowUp, mdiArrowDown, mdiRestart, mdiChevronDown, mdiChevronUp } from '@mdi/js';
+  import Login from "$lib/components/forms/Login.svelte";
+  import AppLayout from "./AppLayout.svelte";
+  import InitialSetupForm from "$lib/components/forms/InitialSetupForm.svelte";
+  import { toasts } from "$lib/stores/toastStore";
+  import { authStore } from "$lib/stores/authStore";
+  import { goto } from "$app/navigation";
+  import {
+    mdiArrowUp,
+    mdiArrowDown,
+    mdiRestart,
+    mdiChevronDown,
+    mdiChevronUp,
+  } from "@mdi/js";
 
   let isFirstRun: boolean | null = null;
   let isLoading = true;
@@ -19,7 +25,7 @@
     try {
       isFirstRun = await invoke<boolean>("check_first_run");
       console.log("Is first run:", isFirstRun);
-      
+
       if (!isFirstRun) {
         authStore.setConfigured(true);
         if ($authStore.isLoggedIn) {
@@ -50,38 +56,53 @@
     try {
       await invoke("restart_service", { serviceId });
       toasts.success(`Service ${serviceId} restarted successfully`);
-      await loadDashboardData(); // Refresh data after restart
+      await loadDashboardData();
     } catch (error) {
       console.error(`Failed to restart service ${serviceId}:`, error);
       toasts.error(`Failed to restart service ${serviceId}. Please try again.`);
     }
   }
 
-  async function handleInitialSetup(event: CustomEvent<{apiKey: string, apiSecret: string, apiUrl: string, port: number, pin: string}>) {
-    const { apiKey, apiSecret, apiUrl, port, pin } = event.detail;
+  async function handleInitialSetup(
+    event: CustomEvent<{
+        profileName: string;
+        apiKey: string;
+        apiSecret: string;
+        apiUrl: string;
+        port: number;
+        pin: string;
+    }>,
+) {
+    const { profileName, apiKey, apiSecret, apiUrl, port, pin } = event.detail;
     console.log("Saving initial config...");
 
     try {
-      await invoke("save_initial_config", { 
-        apiKey, 
-        apiSecret, 
-        apiUrl, 
-        port,
-        pin 
-      });
-      
-      console.log("Configuration saved successfully");
-      isFirstRun = false;
-      authStore.setConfigured(true);
-      toasts.success("Configuration saved successfully!");
-      goto('/');
-    } catch (error) {
-      console.error("Failed to save configuration:", error);
-      toasts.error(`Failed to save configuration: ${error}`);
-    }
-  }
+        await invoke("save_initial_config", {
+            config: {
+                profile_name: profileName,
+                api_key: apiKey,
+                api_secret: apiSecret,
+                api_url: apiUrl,
+                port,
+                pin,
+            },
+        });
 
-  function handleFormError(event: CustomEvent<{message: string}>) {
+        console.log("Configuration saved successfully");
+        isFirstRun = false;
+        authStore.setConfigured(true);
+        toasts.success("Configuration saved successfully!");
+
+        setTimeout(() => {
+            goto("/");
+        }, 100);
+    } catch (error) {
+        console.error("Failed to save configuration:", error);
+        toasts.error(`Failed to save configuration: ${error}`);
+    }
+}
+
+  function handleFormError(event: CustomEvent<{ message: string }>) {
     toasts.error(event.detail.message);
   }
 
@@ -107,10 +128,12 @@
     <div class="max-w-md mx-auto space-y-8">
       <div class="text-center">
         <h1 class="text-3xl font-bold mb-2">Welcome to OPNsense Manager</h1>
-        <p class="text-base-content">Please enter your API information and create a PIN to get started.</p>
+        <p class="text-base-content">
+          Please enter your API information and create a PIN to get started.
+        </p>
       </div>
       <div class="card bg-base-100 shadow-xl">
-        <InitialSetupForm 
+        <InitialSetupForm
           on:submit={handleInitialSetup}
           on:error={handleFormError}
         />
@@ -123,7 +146,7 @@
   <AppLayout>
     <div class="p-4 max-w-3xl mx-auto">
       <h2 class="text-2xl font-bold mb-4">OPNsense Dashboard</h2>
-      
+
       {#if gatewayStatus && services}
         <div class="space-y-4">
           <!-- Gateway Status -->
@@ -133,23 +156,39 @@
               <ul class="space-y-2">
                 {#each gatewayStatus.items as gateway}
                   <li class="border rounded-lg p-3">
-                    <div class="flex justify-between items-center cursor-pointer" on:click={() => toggleGatewayExpansion(gateway.name)}>
+                    <div
+                      class="flex justify-between items-center cursor-pointer"
+                      on:click={() => toggleGatewayExpansion(gateway.name)}
+                    >
                       <div>
                         <div class="font-medium">{gateway.name}</div>
                         <div class="text-sm opacity-50">{gateway.address}</div>
                       </div>
-                      <span class="badge {gateway.status_translated === 'Online' ? 'badge-success' : 'badge-error'}">
+                      <span
+                        class="badge {gateway.status_translated === 'Online'
+                          ? 'badge-success'
+                          : 'badge-error'}"
+                      >
                         {gateway.status_translated}
                       </span>
                       <svg class="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="currentColor" d={expandedGateway === gateway.name ? mdiChevronUp : mdiChevronDown} />
+                        <path
+                          fill="currentColor"
+                          d={expandedGateway === gateway.name
+                            ? mdiChevronUp
+                            : mdiChevronDown}
+                        />
                       </svg>
                     </div>
                     {#if expandedGateway === gateway.name}
                       <div class="mt-2 text-sm">
-                        <p>RTT: {gateway.delay === '~' ? '-' : gateway.delay}</p>
-                        <p>RTTd: {gateway.stddev === '~' ? '-' : gateway.stddev}</p>
-                        <p>Loss: {gateway.loss === '~' ? '-' : gateway.loss}</p>
+                        <p>
+                          RTT: {gateway.delay === "~" ? "-" : gateway.delay}
+                        </p>
+                        <p>
+                          RTTd: {gateway.stddev === "~" ? "-" : gateway.stddev}
+                        </p>
+                        <p>Loss: {gateway.loss === "~" ? "-" : gateway.loss}</p>
                       </div>
                     {/if}
                   </li>
@@ -168,19 +207,29 @@
                     <div class="flex justify-between items-center">
                       <div class="flex-grow">
                         <div class="font-medium">{service.name}</div>
-                        <div class="text-sm opacity-50">{service.description}</div>
+                        <div class="text-sm opacity-50">
+                          {service.description}
+                        </div>
                       </div>
                       <div class="flex items-center space-x-3">
-                        <svg 
-                          class="w-5 h-5 {service.running ? 'text-success' : 'text-error'}" 
+                        <svg
+                          class="w-5 h-5 {service.running
+                            ? 'text-success'
+                            : 'text-error'}"
                           viewBox="0 0 24 24"
-                          title={service.running ? "Service is running" : "Service is stopped"}
+                          title={service.running
+                            ? "Service is running"
+                            : "Service is stopped"}
                         >
-                          <path fill="currentColor" d={service.running ? mdiArrowUp : mdiArrowDown} />
+                          <path
+                            fill="currentColor"
+                            d={service.running ? mdiArrowUp : mdiArrowDown}
+                          />
                         </svg>
-                        <button 
-                          class="btn btn-sm btn-ghost" 
-                          on:click|stopPropagation={() => restartService(service.id)}
+                        <button
+                          class="btn btn-sm btn-ghost"
+                          on:click|stopPropagation={() =>
+                            restartService(service.id)}
                           title="Restart Service"
                         >
                           <svg class="w-4 h-4" viewBox="0 0 24 24">

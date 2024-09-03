@@ -45,19 +45,19 @@
     }
   }
 
-  async function handleApiSubmit(event: CustomEvent<{apiKey: string, apiSecret: string, apiUrl: string, port: number, pin: string}>) {
-    const { apiKey, apiSecret, apiUrl, port, pin } = event.detail;
+  async function handleApiSubmit(event: CustomEvent<{profileName: string, apiKey: string, apiSecret: string, apiUrl: string, port: number, pin: string}>) {
+    const { profileName, apiKey, apiSecret, apiUrl, port, pin } = event.detail;
     try {
       if (isFirstRun) {
-        await invoke("save_initial_config", { apiKey, apiSecret, apiUrl, port: Number(port), pin });
+        await invoke("save_initial_config", { profileName, apiKey, apiSecret, apiUrl, port: Number(port), pin });
         isFirstRun = false;
         authStore.setConfigured(true);
         toasts.success("Initial configuration saved successfully!");
       } else {
-        await invoke("update_api_info", { apiKey, apiSecret, apiUrl, port: Number(port) });
+        await invoke("update_api_info", { profileName, apiKey, apiSecret, apiUrl, port: Number(port) });
         toasts.success("API information updated successfully!");
       }
-      await loadApiInfo(); // Reload API info to confirm update
+      await loadApiInfo();
     } catch (error) {
       console.error("Failed to update API info:", error);
       toasts.error("Failed to update API information. Please try again.");
@@ -93,6 +93,14 @@
 
   function setActiveTab(tab: 'api' | 'pin') {
     activeTab = tab;
+  }
+
+  function handleFormError(event: CustomEvent<{ message: string }>) {
+    toasts.error(event.detail.message);
+  }
+
+  function handleFormSuccess(event: CustomEvent<{ message: string }>) {
+    toasts.success(event.detail.message);
   }
 </script>
 
@@ -133,6 +141,8 @@
             {pin}
             showPin={isFirstRun}
             on:submit={handleApiSubmit}
+            on:error={handleFormError}
+            on:success={handleFormSuccess}
           />
         </div>
       {:else if activeTab === 'pin'}

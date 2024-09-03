@@ -1,6 +1,6 @@
 [package]
 name = "opnsensemanager"
-version = "0.1.0"
+version = "3.0.1"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -25,3 +25,4 @@ argon2 = "0.5.3"
 reqwest = { version = "0.12.7", features = ["json", "rustls-tls"], default-features = false }
 log = "0.4.22"
 base64 = "0.22.1"
+tauri-plugin-log = "2.0.0-rc"

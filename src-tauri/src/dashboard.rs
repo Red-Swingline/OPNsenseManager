@@ -48,7 +48,7 @@ pub struct RestartServiceResponse {
 
 #[tauri::command]
 pub async fn get_gateway_status(database: State<'_, Database>) -> Result<GatewayStatus, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -71,7 +71,7 @@ pub async fn get_gateway_status(database: State<'_, Database>) -> Result<Gateway
 
 #[tauri::command]
 pub async fn get_services(database: State<'_, Database>) -> Result<ServicesResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
@@ -94,7 +94,7 @@ pub async fn get_services(database: State<'_, Database>) -> Result<ServicesRespo
 
 #[tauri::command]
 pub async fn restart_service(database: State<'_, Database>, service_id: String) -> Result<RestartServiceResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 

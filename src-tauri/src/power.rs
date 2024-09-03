@@ -14,7 +14,7 @@ fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
 
 #[tauri::command]
 pub async fn reboot_firewall(database: State<'_, Database>) -> Result<RebootResponse, String> {
-    let api_info = database.get_api_info()
+    let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
