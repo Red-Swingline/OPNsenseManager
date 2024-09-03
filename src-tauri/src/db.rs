@@ -270,15 +270,29 @@ impl Database {
     }
 
     pub fn delete_api_profile(&self, profile_name: &str) -> Result<()> {
-        let conn = self.conn.lock().unwrap();
-        conn.execute("DELETE FROM api_info WHERE profile_name = ?1", params![profile_name])?;
+        let mut conn = self.conn.lock().unwrap();
+        let tx = conn.transaction()?;
+    
+        tx.execute("DELETE FROM api_info WHERE profile_name = ?1", params![profile_name])?;
         
-        if conn.changes() > 0 {
-            self.ensure_default_profile()?;
+        // Check if the deleted profile was the default
+        let was_default: bool = tx.query_row(
+            "SELECT COUNT(*) = 0 FROM api_info WHERE is_default = 1",
+            [],
+            |row| row.get(0)
+        )?;
+    
+        if was_default {
+            // Set a new default profile
+            tx.execute(
+                "UPDATE api_info SET is_default = 1 WHERE id = (SELECT MIN(id) FROM api_info)",
+                [],
+            )?;
         }
-
+    
+        tx.commit()?;
         Ok(())
-    }    
+    }
 
     fn ensure_default_profile(&self) -> Result<()> {
         let conn = self.conn.lock().unwrap();

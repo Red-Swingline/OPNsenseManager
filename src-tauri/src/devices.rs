@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use serde_json::json;
 use tauri::State;
 use crate::db::Database;
 use crate::http_client::make_http_request;
@@ -61,7 +62,7 @@ pub async fn flush_arp_table(database: State<'_, Database>) -> Result<FlushArpRe
     let response = make_http_request(
         "POST",
         &url,
-        None,
+        Some(json!({})),  // Empty JSON object as payload
         None,
         Some(30),
         Some(&api_info.api_key),

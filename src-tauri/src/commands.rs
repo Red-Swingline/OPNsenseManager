@@ -158,3 +158,89 @@ pub fn update_pin(current_pin: String, new_pin: String, confirm_new_pin: String,
     database.update_password_hash(&password_hash)
         .map_err(|e| e.to_string())
 }
+
+#[derive(Deserialize)]
+pub struct NewApiProfile {
+    profile_name: String,
+    api_key: String,
+    api_secret: String,
+    api_url: String,
+    port: u16,
+}
+
+#[tauri::command]
+pub async fn add_api_profile(
+    profile: NewApiProfile,
+    database: State<'_, Database>
+) -> Result<(), String> {
+    info!("Starting add_api_profile");
+
+    let api_info = ApiInfo {
+        id: 0, 
+        profile_name: profile.profile_name,
+        api_key: profile.api_key,
+        api_secret: profile.api_secret,
+        api_url: profile.api_url,
+        port: profile.port,
+        is_default: false, // New profiles are not set as default
+    };
+
+    info!("Saving new API profile");
+    database.save_api_info(&api_info)
+        .map_err(|e| {
+            error!("Failed to save API profile: {}", e);
+            format!("Failed to save API profile: {}", e)
+        })?;
+
+    info!("New API profile saved successfully");
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_api_profile(profile_name: String, database: State<Database>) -> Result<(), String> {
+    info!("Starting delete_api_profile for profile: {}", profile_name);
+
+
+    let profiles = database.list_api_profiles()
+        .map_err(|e| format!("Failed to list API profiles: {}", e))?;
+    
+    if profiles.len() == 1 {
+        return Err("Cannot delete the last profile".to_string());
+    }
+
+    let is_default = profiles.iter().find(|p| p.profile_name == profile_name)
+        .map(|p| p.is_default)
+        .unwrap_or(false);
+
+    database.delete_api_profile(&profile_name)
+        .map_err(|e| {
+            error!("Failed to delete API profile: {}", e);
+            format!("Failed to delete API profile: {}", e)
+        })?;
+
+
+    if is_default {
+        let new_default = profiles.iter()
+            .find(|p| p.profile_name != profile_name)
+            .ok_or_else(|| "No other profile found to set as default".to_string())?;
+        
+        database.set_default_profile(&new_default.profile_name)
+            .map_err(|e| {
+                error!("Failed to set new default profile: {}", e);
+                format!("Failed to set new default profile: {}", e)
+            })?;
+    }
+
+    info!("API profile deleted successfully");
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_default_profile(profile_name: String, database: State<Database>) -> Result<(), String> {
+    info!("Setting default profile: {}", profile_name);
+    database.set_default_profile(&profile_name)
+        .map_err(|e| {
+            error!("Failed to set default profile: {}", e);
+            format!("Failed to set default profile: {}", e)
+        })
+}

@@ -12,9 +12,16 @@
     description: string;
   }
 
-  interface AliasDetails extends Alias {
+  interface AliasDetails {
     uuid: string;
+    enabled: string;
+    name: string;
+    description: string;
+    type: string;
     content: string;
+    current_items: string;
+    last_updated: string;
+    categories_uuid: string[];
   }
 
   interface AliasItemsResponse {
@@ -50,48 +57,32 @@
     isLoading = true;
     error = null;
     try {
-      const [aliasesResult, detailsResult] = await Promise.all([
-        invoke<Record<string, Alias>>("list_network_aliases"),
-        invoke<AliasItemsResponse>("search_alias_items"),
-      ]);
+      const detailsResult = await invoke<AliasItemsResponse>("search_alias_items");
 
-      console.log(
-        "Full JSON result from list_network_aliases:",
-        JSON.stringify(aliasesResult, null, 2),
-      );
       console.log(
         "Full JSON result from search_alias_items:",
         JSON.stringify(detailsResult, null, 2),
       );
 
-      if (aliasesResult && typeof aliasesResult === "object") {
-        aliases = Object.fromEntries(
-          Object.entries(aliasesResult).filter(
-            ([key, _]) => !key.startsWith("__"),
-          ),
-        );
-      } else {
-        throw new Error("Invalid response from list_network_aliases");
-      }
+      if (detailsResult && detailsResult.rows) {
+        aliases = detailsResult.rows.reduce((acc, item) => {
+          if (!item.name.startsWith("bogons") && !item.name.startsWith("__") && !item.name.startsWith("virusprot") && !item.name.startsWith("sshlockout")) {
+            acc[item.name] = {
+              name: item.name,
+              description: item.description,
+            };
+          }
+          return acc;
+        }, {} as Record<string, Alias>);
 
-      if (
-        detailsResult &&
-        typeof detailsResult === "object" &&
-        detailsResult.rows
-      ) {
-        aliasDetails = detailsResult.rows
-          .filter((item) => !item.name.startsWith("__"))
-          .reduce(
-            (acc, item) => {
-              acc[item.name] = item;
-              return acc;
-            },
-            {} as Record<string, AliasDetails>,
-          );
-        console.log(
-          "Processed aliasDetails:",
-          JSON.stringify(aliasDetails, null, 2),
-        );
+        aliasDetails = detailsResult.rows.reduce((acc, item) => {
+          if (!item.name.startsWith("__")) {
+            acc[item.name] = item;
+          }
+          return acc;
+        }, {} as Record<string, AliasDetails>);
+
+        console.log("Processed aliasDetails:", JSON.stringify(aliasDetails, null, 2));
       } else {
         throw new Error("Invalid response from search_alias_items");
       }
@@ -99,8 +90,7 @@
       applyFilter();
     } catch (err) {
       console.error("Failed to fetch aliases:", err);
-      error =
-        err instanceof Error ? err.message : "An unexpected error occurred";
+      error = err instanceof Error ? err.message : "An unexpected error occurred";
       toasts.error(`Failed to fetch aliases: ${error}`);
     } finally {
       isLoading = false;
@@ -124,7 +114,7 @@
       "Full aliasDetails object:",
       JSON.stringify(aliasDetails, null, 2),
     );
-    selectedAlias = aliasDetails[alias.name] || (alias as AliasDetails);
+    selectedAlias = aliasDetails[alias.name];
     console.log(
       "Selected alias details:",
       JSON.stringify(selectedAlias, null, 2),
@@ -138,10 +128,11 @@
     isAddingIp = true;
     try {
       const currentContent = selectedAlias.content || "";
+      const updatedContent = currentContent ? `${currentContent}\n${newIpAddress}` : newIpAddress;
 
       await invoke("add_ip_to_alias", {
         uuid: selectedAlias.uuid,
-        currentContent: currentContent,
+        currentContent: updatedContent,
         newIp: newIpAddress,
       });
 
@@ -181,9 +172,7 @@
       console.log("Current alias content:", selectedAlias.content);
 
       const currentContent = selectedAlias.content || "";
-      const contentArray = currentContent
-        .split(/[\n,]+/)
-        .map((item) => item.trim());
+      const contentArray = currentContent.split("\n").map((item) => item.trim());
       const updatedContentArray = contentArray.filter((item) => item !== ip);
       const updatedContent = updatedContentArray.join("\n");
 
@@ -215,12 +204,7 @@
   async function refreshAliasDetails(aliasName: string): Promise<void> {
     try {
       console.log("Refreshing alias details for:", aliasName);
-      const updatedAlias = await invoke<AliasDetails>("get_alias", {
-        aliasName,
-      });
-      console.log("Received updated alias:", updatedAlias);
-      const freshAliasDetails =
-        await invoke<AliasItemsResponse>("search_alias_items");
+      const freshAliasDetails = await invoke<AliasItemsResponse>("search_alias_items");
       console.log("Fresh alias details:", freshAliasDetails);
 
       if (freshAliasDetails && freshAliasDetails.rows) {
@@ -228,8 +212,8 @@
           (item) => item.name === aliasName,
         );
         if (freshAlias && selectedAlias) {
-          selectedAlias = { ...selectedAlias, ...freshAlias };
-          aliasDetails[selectedAlias.name] = { ...selectedAlias };
+          selectedAlias = freshAlias;
+          aliasDetails[selectedAlias.name] = freshAlias;
           console.log("Updated selectedAlias:", selectedAlias);
         } else {
           console.error("Couldn't find the updated alias in the fresh data");
@@ -359,9 +343,7 @@
         <h3 class="text-xl font-semibold mb-2">IP Addresses</h3>
         {#if selectedAlias.content}
           <div class="flex flex-wrap gap-2 mb-4">
-            {#each selectedAlias.content
-              .split(",")
-              .map((ip) => ip.trim()) as ip}
+            {#each selectedAlias.content.split("\n").map((ip) => ip.trim()) as ip}
               {#if ip}
                 <div class="badge badge-lg gap-2 p-3">
                   {ip}
