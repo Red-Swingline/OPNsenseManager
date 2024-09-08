@@ -26,3 +26,4 @@ reqwest = { version = "0.12.7", features = ["json", "rustls-tls"], default-featu
 log = "0.4.22"
 base64 = "0.22.1"
 tauri-plugin-log = "2.0.0-rc"
+tokio = { version = "1.40.0", features = ["full"] }
