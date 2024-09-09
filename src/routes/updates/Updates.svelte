@@ -2,31 +2,24 @@
   import { onMount } from 'svelte';
   import { invoke } from "@tauri-apps/api/core";
   import { toasts } from '$lib/stores/toastStore';
-  import { mdiRefresh } from '@mdi/js';
+  import { mdiRefresh, mdiPackageVariant, mdiCog } from '@mdi/js';
 
-  interface FirmwareStatus {
-    product_id: string;
-    product_version: string;
-    product: {
-      product_arch: string;
-      product_hash: string;
-      product_mirror: string;
-      product_repos: string;
-      product_time: string;
-    };
-    last_check: string;
-  }
-
-  let firmwareStatus: FirmwareStatus | null = null;
+  let firmwareStatus: any = null;
   let isChecking = false;
+  let isUpdating = false;
+  let showChangelogButton = false;
+  let showUpgradeButton = false;
+  let changelog = '';
+  let showChangelog = false;
 
   onMount(async () => {
-    await getCurrentStatus();
+    await getFirmwareStatus();
   });
 
-  async function getCurrentStatus() {
+  async function getFirmwareStatus() {
     try {
-      firmwareStatus = await invoke<FirmwareStatus>('get_current_firmware_status');
+      firmwareStatus = await invoke<any>('get_current_firmware_status');
+      console.log('Current firmware status:', firmwareStatus);
     } catch (error) {
       console.error('Failed to get current firmware status:', error);
       toasts.error('Failed to get current firmware status. Please try again.');
@@ -35,14 +28,53 @@
 
   async function checkForUpdates() {
     isChecking = true;
+    showChangelogButton = false;
+    showUpgradeButton = false;
     try {
-      firmwareStatus = await invoke<FirmwareStatus>('check_for_updates');
-      toasts.success('Update check completed successfully.');
+      const result = await invoke<any>('check_for_updates');
+      console.log('Check for updates result:', result);
+      if (result.status === "update") {
+        showChangelogButton = true;
+        showUpgradeButton = true;
+        toasts.success('Updates are available.');
+      } else {
+        toasts.success('Your system is up to date.');
+      }
+      firmwareStatus = result;
     } catch (error) {
       console.error('Failed to check for updates:', error);
-      toasts.error('Failed to check for updates. Please try again.');
+      toasts.error(`Failed to check for updates: ${error}`);
     } finally {
       isChecking = false;
+    }
+  }
+
+  async function getChangelog() {
+    if (firmwareStatus?.latest_version) {
+      try {
+        changelog = await invoke<string>('get_changelog', { version: firmwareStatus.latest_version });
+        showChangelog = true;
+      } catch (error) {
+        console.error('Failed to get changelog:', error);
+        toasts.error('Failed to get changelog. Please try again.');
+      }
+    }
+  }
+
+  async function startUpdate() {
+    isUpdating = true;
+    try {
+      const result = await invoke<string>('start_update');
+      console.log('Update result:', result);
+      toasts.success(result);
+      showChangelogButton = false;
+      showUpgradeButton = false;
+      await getFirmwareStatus();
+    } catch (error) {
+      console.error('Failed to start update:', error);
+      toasts.error(`Failed to start update: ${error}`);
+    } finally {
+      isUpdating = false;
     }
   }
 </script>
@@ -56,40 +88,32 @@
         <table class="table w-full">
           <tbody>
             <tr>
-              <td class="font-semibold">Type</td>
-              <td>{firmwareStatus.product_id}</td>
-            </tr>
-            <tr>
               <td class="font-semibold">Version</td>
-              <td>{firmwareStatus.product_version}</td>
+              <td>{firmwareStatus.product_version ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Architecture</td>
-              <td>{firmwareStatus.product.product_arch}</td>
+              <td>{firmwareStatus.product?.product_arch ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Commit</td>
-              <td>{firmwareStatus.product.product_hash}</td>
+              <td>{firmwareStatus.product?.product_hash ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Mirror</td>
-              <td>
-                <a href={firmwareStatus.product.product_mirror} class="link link-primary" target="_blank" rel="noopener noreferrer">
-                  {firmwareStatus.product.product_mirror}
-                </a>
-              </td>
+              <td>{firmwareStatus.product?.product_mirror ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Repositories</td>
-              <td>{firmwareStatus.product.product_repos}</td>
+              <td>{firmwareStatus.product?.product_repos ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Updated on</td>
-              <td>{firmwareStatus.product.product_time}</td>
+              <td>{firmwareStatus.product?.product_time ?? 'Unknown'}</td>
             </tr>
             <tr>
               <td class="font-semibold">Checked on</td>
-              <td>{firmwareStatus.last_check}</td>
+              <td>{firmwareStatus.last_check ?? 'N/A'}</td>
             </tr>
           </tbody>
         </table>
@@ -99,22 +123,64 @@
     <p class="mb-6">Loading current status...</p>
   {/if}
 
-  <button
-    class="btn btn-primary"
-    on:click={checkForUpdates}
-    disabled={isChecking}
-  >
-    {#if isChecking}
-      <span class="loading loading-spinner"></span>
-    {:else}
-      <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-        <path fill="currentColor" d={mdiRefresh} />
-      </svg>
-    {/if}
-    Check for Updates
-  </button>
+  <div class="flex space-x-4">
+    <button
+      class="btn btn-primary"
+      on:click={checkForUpdates}
+      disabled={isChecking || isUpdating}
+    >
+      {#if isChecking}
+        <span class="loading loading-spinner"></span>
+      {:else}
+        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+          <path fill="currentColor" d={mdiRefresh} />
+        </svg>
+      {/if}
+      Check for Updates
+    </button>
 
-  {#if isChecking}
-    <p class="mt-4">Checking for updates... This may take a few moments.</p>
+    {#if showChangelogButton}
+      <button class="btn btn-secondary" on:click={getChangelog} disabled={isUpdating}>
+        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+          <path fill="currentColor" d={mdiPackageVariant} />
+        </svg>
+        View Changelog
+      </button>
+    {/if}
+
+    {#if showUpgradeButton}
+      <button class="btn btn-accent" on:click={startUpdate} disabled={isUpdating}>
+        {#if isUpdating}
+          <span class="loading loading-spinner"></span>
+        {:else}
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <path fill="currentColor" d={mdiCog} />
+          </svg>
+        {/if}
+        Upgrade
+      </button>
+    {/if}
+  </div>
+
+  {#if isUpdating}
+    <div class="mt-4 p-4 bg-base-200 rounded-lg">
+      <h3 class="text-lg font-semibold mb-2">Update in Progress</h3>
+      <p>The system is being updated. This may take several minutes and the system may reboot.</p>
+      <progress class="progress progress-primary w-full mt-2" max="100"></progress>
+    </div>
+  {/if}
+
+  {#if showChangelog}
+    <div class="modal modal-open">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Changelog</h3>
+        <div class="py-4">
+          {@html changelog}
+        </div>
+        <div class="modal-action">
+          <button class="btn" on:click={() => showChangelog = false}>Close</button>
+        </div>
+      </div>
+    </div>
   {/if}
 </div>

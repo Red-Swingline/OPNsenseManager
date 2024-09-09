@@ -1,91 +1,22 @@
-use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::State;
 use crate::db::Database;
 use crate::http_client::make_http_request;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::time::sleep;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct UpdateStatus {
-    status: String,
-    log: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct FirmwareStatus {
-    api_version: String,
-    connection: String,
-    download_size: String,
-    last_check: String,
-    needs_reboot: String,
-    os_version: String,
-    product_id: String,
-    product_target: String,
-    product_version: String,
-    product_abi: String,
-    repository: String,
-    upgrade_major_message: String,
-    upgrade_major_version: String,
-    upgrade_needs_reboot: String,
-    product: ProductInfo,
-    status_msg: String,
-    status: String,
-    #[serde(default)]
-    downgrade_packages: Vec<String>,
-    #[serde(default)]
-    new_packages: Vec<String>,
-    #[serde(default)]
-    reinstall_packages: Vec<String>,
-    #[serde(default)]
-    remove_packages: Vec<String>,
-    #[serde(default)]
-    upgrade_packages: Vec<String>,
-    #[serde(default)]
-    upgrade_sets: Vec<String>,
-    #[serde(default)]
-    all_packages: Vec<String>,
-    #[serde(default)]
-    all_sets: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ProductInfo {
-    product_abi: String,
-    product_arch: String,
-    product_copyright_owner: String,
-    product_copyright_url: String,
-    product_copyright_years: String,
-    product_email: String,
-    product_hash: String,
-    product_id: String,
-    product_latest: String,
-    product_name: String,
-    product_nickname: String,
-    product_repos: String,
-    product_series: String,
-    product_tier: String,
-    product_time: String,
-    product_version: String,
-    product_website: String,
-    #[serde(default)]
-    product_license: Vec<String>,
-    product_log: u8,
-    product_mirror: String,
-}
 
 fn build_api_url(api_info: &crate::db::ApiInfo, endpoint: &str) -> String {
     format!("{}:{}{}", api_info.api_url, api_info.port, endpoint)
 }
 
 #[tauri::command]
-pub async fn check_for_updates(database: State<'_, Database>) -> Result<FirmwareStatus, String> {
+pub async fn check_for_updates(database: State<'_, Database>) -> Result<Value, String> {
     let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
-    // Initiate the update check
     let check_url = build_api_url(&api_info, "/api/core/firmware/check");
-    let _ = make_http_request(
+    let check_response = make_http_request(
         "POST",
         &check_url,
         Some(serde_json::json!({})),
@@ -96,10 +27,16 @@ pub async fn check_for_updates(database: State<'_, Database>) -> Result<Firmware
     )
     .await?;
 
-    // Poll for status
+    let check_body: Value = check_response.json().await
+        .map_err(|e| format!("Failed to parse check response: {}", e))?;
+
+    if check_body["status"] != "ok" {
+        return Err(format!("Check failed: {:?}", check_body));
+    }
+
     let status_url = build_api_url(&api_info, "/api/core/firmware/upgradestatus");
     loop {
-        let response = make_http_request(
+        let status_response = make_http_request(
             "GET",
             &status_url,
             None,
@@ -110,19 +47,18 @@ pub async fn check_for_updates(database: State<'_, Database>) -> Result<Firmware
         )
         .await?;
 
-        let update_status: UpdateStatus = response.json().await
-            .map_err(|e| format!("Failed to parse update status: {}", e))?;
+        let status_body: Value = status_response.json().await
+            .map_err(|e| format!("Failed to parse status response: {}", e))?;
 
-        if update_status.status == "done" {
+        if status_body["status"] == "done" {
             break;
         }
 
         sleep(Duration::from_secs(2)).await;
     }
 
-    // Get final firmware status
     let firmware_status_url = build_api_url(&api_info, "/api/core/firmware/status");
-    let response = make_http_request(
+    let firmware_status_response = make_http_request(
         "GET",
         &firmware_status_url,
         None,
@@ -133,18 +69,144 @@ pub async fn check_for_updates(database: State<'_, Database>) -> Result<Firmware
     )
     .await?;
 
-    response.json::<FirmwareStatus>().await
-        .map_err(|e| format!("Failed to parse firmware status: {}", e))
+    let firmware_status: Value = firmware_status_response.json().await
+        .map_err(|e| format!("Failed to parse firmware status: {}", e))?;
+
+    let firmware_info_url = build_api_url(&api_info, "/api/core/firmware/info");
+    let firmware_info_response = make_http_request(
+        "GET",
+        &firmware_info_url,
+        None,
+        None,
+        Some(30),
+        Some(&api_info.api_key),
+        Some(&api_info.api_secret),
+    )
+    .await?;
+
+    let firmware_info: Value = firmware_info_response.json().await
+        .map_err(|e| format!("Failed to parse firmware info: {}", e))?;
+
+    let mut result = firmware_status;
+    result["latest_version"] = firmware_info["product"]["product_latest"].clone();
+
+    Ok(result)
 }
 
 #[tauri::command]
-pub async fn get_current_firmware_status(database: State<'_, Database>) -> Result<FirmwareStatus, String> {
+pub async fn get_changelog(database: State<'_, Database>, version: String) -> Result<String, String> {
+    let api_info = database.get_default_api_info()
+        .map_err(|e| format!("Failed to get API info: {}", e))?
+        .ok_or_else(|| "API info not found".to_string())?;
+
+    let changelog_url = build_api_url(&api_info, &format!("/api/core/firmware/changelog/{}", version));
+    let response = make_http_request(
+        "POST",
+        &changelog_url,
+        Some(serde_json::json!({})),
+        None,
+        Some(30),
+        Some(&api_info.api_key),
+        Some(&api_info.api_secret),
+    )
+    .await?;
+
+    let changelog: Value = response.json().await
+        .map_err(|e| format!("Failed to parse changelog response: {}", e))?;
+
+    Ok(changelog["html"].as_str().unwrap_or("").to_string())
+}
+
+#[tauri::command]
+pub async fn start_update(database: State<'_, Database>) -> Result<String, String> {
+    let api_info = database.get_default_api_info()
+        .map_err(|e| format!("Failed to get API info: {}", e))?
+        .ok_or_else(|| "API info not found".to_string())?;
+
+    let update_url = build_api_url(&api_info, "/api/core/firmware/update");
+    let response = make_http_request(
+        "POST",
+        &update_url,
+        Some(serde_json::json!({})),
+        None,
+        Some(30),
+        Some(&api_info.api_key),
+        Some(&api_info.api_secret),
+    )
+    .await?;
+
+    let update_response: Value = response.json().await
+        .map_err(|e| format!("Failed to parse update response: {}", e))?;
+
+    if update_response["status"] != "ok" {
+        return Err(format!("Update failed: {:?}", update_response));
+    }
+
+    let status_url = build_api_url(&api_info, "/api/core/firmware/upgradestatus");
+    let start_time = Instant::now();
+    let timeout = Duration::from_secs(1800); // 30 minutes timeout
+    let mut reboot_detected = false;
+
+    while start_time.elapsed() < timeout {
+        match make_http_request(
+            "GET",
+            &status_url,
+            None,
+            None,
+            Some(5),
+            Some(&api_info.api_key),
+            Some(&api_info.api_secret),
+        )
+        .await
+        {
+            Ok(response) => {
+                if reboot_detected {
+                    // If we can reach the server after a reboot, the update is complete
+                    return Ok("Update completed successfully. System is back online.".to_string());
+                }
+
+                let upgrade_status: Value = response.json().await
+                    .map_err(|e| format!("Failed to parse upgrade status: {}", e))?;
+
+                match upgrade_status["status"].as_str() {
+                    Some("reboot") => {
+                        println!("Reboot initiated, waiting for system to become unresponsive...");
+                        reboot_detected = true;
+                    },
+                    Some("done") => {
+                        if !reboot_detected {
+                            println!("Update process completed, waiting for reboot...");
+                        }
+                    },
+                    Some(status) => println!("Current status: {}", status),
+                    None => println!("Unknown status"),
+                }
+            },
+            Err(_) => {
+                if reboot_detected {
+                    println!("System is unresponsive, waiting for it to come back online...");
+                } else {
+                    // If we haven't detected a reboot yet, this could be the start of one
+                    reboot_detected = true;
+                    println!("Lost connection to system, possible reboot in progress...");
+                }
+            }
+        }
+
+        sleep(Duration::from_secs(10)).await;
+    }
+
+    Err("Update timed out or failed to detect system coming back online".to_string())
+}
+
+#[tauri::command]
+pub async fn get_current_firmware_status(database: State<'_, Database>) -> Result<Value, String> {
     let api_info = database.get_default_api_info()
         .map_err(|e| format!("Failed to get API info: {}", e))?
         .ok_or_else(|| "API info not found".to_string())?;
 
     let firmware_status_url = build_api_url(&api_info, "/api/core/firmware/status");
-    let response = make_http_request(
+    let firmware_status_response = make_http_request(
         "GET",
         &firmware_status_url,
         None,
@@ -155,6 +217,8 @@ pub async fn get_current_firmware_status(database: State<'_, Database>) -> Resul
     )
     .await?;
 
-    response.json::<FirmwareStatus>().await
-        .map_err(|e| format!("Failed to parse firmware status: {}", e))
+    let firmware_status: Value = firmware_status_response.json().await
+        .map_err(|e| format!("Failed to parse firmware status: {}", e))?;
+
+    Ok(firmware_status)
 }

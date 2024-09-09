@@ -49,8 +49,10 @@ pub fn run() {
             firewall::apply_firewall_changes,
             power::reboot_firewall,
             traffic::get_interface_traffic,
-            update_checker::check_for_updates,
             update_checker::get_current_firmware_status,
+            update_checker::check_for_updates,
+            update_checker::get_changelog,
+            update_checker::start_update,
 
             ])
         .run(tauri::generate_context!())
