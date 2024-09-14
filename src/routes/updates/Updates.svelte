@@ -83,37 +83,37 @@
   <h2 class="text-2xl font-bold mb-4">Firmware Status</h2>
 
   {#if firmwareStatus}
-    <div class="card bg-base-100 shadow-xl mb-6">
-      <div class="card-body">
+    <div class="card bg-base-100 shadow-xl mb-6 overflow-x-auto">
+      <div class="card-body p-4">
         <table class="table w-full">
           <tbody>
             <tr>
-              <td class="font-semibold">Version</td>
-              <td>{firmwareStatus.product_version ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Version</td>
+              <td class="break-all">{firmwareStatus.product_version ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Architecture</td>
-              <td>{firmwareStatus.product?.product_arch ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Architecture</td>
+              <td class="break-all">{firmwareStatus.product?.product_arch ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Commit</td>
-              <td>{firmwareStatus.product?.product_hash ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Commit</td>
+              <td class="break-all">{firmwareStatus.product?.product_hash ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Mirror</td>
-              <td>{firmwareStatus.product?.product_mirror ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Mirror</td>
+              <td class="break-all">{firmwareStatus.product?.product_mirror ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Repositories</td>
-              <td>{firmwareStatus.product?.product_repos ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Repositories</td>
+              <td class="break-all">{firmwareStatus.product?.product_repos ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Updated on</td>
-              <td>{firmwareStatus.product?.product_time ?? 'Unknown'}</td>
+              <td class="font-semibold whitespace-nowrap">Updated on</td>
+              <td class="break-all">{firmwareStatus.product?.product_time ?? 'Unknown'}</td>
             </tr>
             <tr>
-              <td class="font-semibold">Checked on</td>
-              <td>{firmwareStatus.last_check ?? 'N/A'}</td>
+              <td class="font-semibold whitespace-nowrap">Checked on</td>
+              <td class="break-all">{firmwareStatus.last_check ?? 'N/A'}</td>
             </tr>
           </tbody>
         </table>
@@ -123,9 +123,9 @@
     <p class="mb-6">Loading current status...</p>
   {/if}
 
-  <div class="flex space-x-4">
+  <div class="flex flex-wrap gap-4">
     <button
-      class="btn btn-primary"
+      class="btn btn-primary flex-grow sm:flex-grow-0"
       on:click={checkForUpdates}
       disabled={isChecking || isUpdating}
     >
@@ -140,7 +140,7 @@
     </button>
 
     {#if showChangelogButton}
-      <button class="btn btn-secondary" on:click={getChangelog} disabled={isUpdating}>
+      <button class="btn btn-secondary flex-grow sm:flex-grow-0" on:click={getChangelog} disabled={isUpdating}>
         <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
           <path fill="currentColor" d={mdiPackageVariant} />
         </svg>
@@ -149,7 +149,7 @@
     {/if}
 
     {#if showUpgradeButton}
-      <button class="btn btn-accent" on:click={startUpdate} disabled={isUpdating}>
+      <button class="btn btn-accent flex-grow sm:flex-grow-0" on:click={startUpdate} disabled={isUpdating}>
         {#if isUpdating}
           <span class="loading loading-spinner"></span>
         {:else}
@@ -172,9 +172,9 @@
 
   {#if showChangelog}
     <div class="modal modal-open">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg">Changelog</h3>
-        <div class="py-4">
+      <div class="modal-box max-w-3xl w-full">
+        <h3 class="font-bold text-lg mb-4">Changelog</h3>
+        <div class="py-4 max-h-96 overflow-y-auto">
           {@html changelog}
         </div>
         <div class="modal-action">
