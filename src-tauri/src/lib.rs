@@ -6,6 +6,8 @@ mod alias;
 mod dashboard;
 mod firewall;
 mod power;
+mod traffic;
+mod update_checker;
 
 use db::Database;
 use tauri::Manager;
@@ -46,6 +48,11 @@ pub fn run() {
             firewall::toggle_firewall_rule,  
             firewall::apply_firewall_changes,
             power::reboot_firewall,
+            traffic::get_interface_traffic,
+            update_checker::get_current_firmware_status,
+            update_checker::check_for_updates,
+            update_checker::get_changelog,
+            update_checker::start_update,
 
             ])
         .run(tauri::generate_context!())
