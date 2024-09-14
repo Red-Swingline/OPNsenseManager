@@ -11,6 +11,8 @@ OPNsense Manager is a streamlined, user-friendly application designed to simplif
     - https://docs.opnsense.org/development/api/core/firewall.html
 - **Alias Management**: Easily view, add, and remove IP addresses from firewall aliases.
 - **Simple Settings**: Configure API access and update security PIN with a straightforward interface.
+- **Multiple Firewall management**: Add multiple Firewall profiles and IP addresses
+- **Dark Mode**: Add dark/light mod theme switch to top Navbar
 
 ## Purpose
 
@@ -60,8 +62,10 @@ Your feedback and contributions are welcome! Please open an issue or submit a pu
 
 ## Screenshots
 
-|  ![Screenshot 1](https://github.com/user-attachments/assets/4a3f55d2-88e1-4ab5-870e-3c843659129b)  | --- | ![Screenshot 3](https://github.com/user-attachments/assets/c7129725-b9cc-400c-bfdf-c56df1a28284) |
+|  ![Screenshot 1](https://github.com/user-attachments/assets/4a3f55d2-88e1-4ab5-870e-3c843659129b)  | ![96172b51-1762-4b01-926d-0663e7b35348](https://github.com/user-attachments/assets/0be2170a-e466-4bc2-956d-3ff48c594e2f) | ![596b5647-a6b7-46ba-8f31-e4e664b03ff0](https://github.com/user-attachments/assets/401cd759-f28e-4ba6-8a60-e4a2289ceeb1) | 
 |---|---|---|
-| ![Screenshot 4](https://github.com/user-attachments/assets/36f17388-6053-4b43-9dda-5221ba607b5b) | ![Screenshot 5](https://github.com/user-attachments/assets/44fbd91e-9619-4f3a-81a6-115efca856be) | ![Screenshot 6](https://github.com/user-attachments/assets/358dab68-280c-48de-bd33-0ed9b5a02643) |
+| ![804ef38c-2c80-4b54-8f69-8b0013e88bcc](https://github.com/user-attachments/assets/1be9b256-fd8c-47d1-8a55-3cceee66ca5f) | ![Screenshot 3](https://github.com/user-attachments/assets/c7129725-b9cc-400c-bfdf-c56df1a28284) 
+| ![Screenshot 4](https://github.com/user-attachments/assets/36f17388-6053-4b43-9dda-5221ba607b5b) | ![7615fe31-577d-429e-8236-72465b05234b](https://github.com/user-attachments/assets/6bf5e237-1e56-4921-ac67-488a04220ae2) | ![Screenshot 6](https://github.com/user-attachments/assets/358dab68-280c-48de-bd33-0ed9b5a02643) |
 | ![Screenshot 7](https://github.com/user-attachments/assets/fa9dfa64-b79d-46bb-962b-d91a2f12dfff) | ![Screenshot 8](https://github.com/user-attachments/assets/a6045ee6-7bc3-4062-9e40-1a78d55ed900) | ![Screenshot 9](https://github.com/user-attachments/assets/abfa9c49-daed-4458-9abe-9d5a23b2a328) |
 | ![Screenshot 10](https://github.com/user-attachments/assets/9b0bf147-6883-4c5a-9891-79fded253762) | ![Screenshot 11](https://github.com/user-attachments/assets/4330a3cd-ab23-40a4-93fb-d5e7c08c98dd) | |
+
