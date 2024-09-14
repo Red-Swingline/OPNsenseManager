@@ -4,6 +4,7 @@ OPNsense Manager is a streamlined, user-friendly application designed to simplif
 
 ## Features
 
+- **Updates**: Check for updates, read change log and update firewall.
 - **Dashboard**: Get a quick overview of your OPNsense system's status, including gateway information and service status.
 - **Device Management**: View devices on your network, including the ability to flush the ARP table.
 - **Firewall Rules**: Enable and disable firewall rules created with the firewall automation plugin. 
