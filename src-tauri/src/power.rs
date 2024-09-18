@@ -2,6 +2,7 @@ use tauri::State;
 use serde::{Serialize, Deserialize};
 use crate::db::Database;
 use crate::http_client::make_http_request;
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RebootResponse {
@@ -20,11 +21,15 @@ pub async fn reboot_firewall(database: State<'_, Database>) -> Result<RebootResp
 
     let url = build_api_url(&api_info, "/api/core/system/reboot");
 
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+    // Add other headers if needed
+
     let response = make_http_request(
         "POST",
         &url,
         Some(serde_json::json!({})),
-        None,
+        Some(headers),
         Some(30),
         Some(&api_info.api_key),
         Some(&api_info.api_secret),
