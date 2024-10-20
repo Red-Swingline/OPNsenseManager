@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch, mdiWallFire, mdiPowerStandby, mdiUpdate, mdiThemeLightDark } from '@mdi/js';
+  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch, mdiWallFire, mdiPowerStandby, mdiUpdate, mdiThemeLightDark, mdiTextBoxSearch } from '@mdi/js';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/authStore';
   import { page } from '$app/stores';
@@ -16,6 +16,7 @@
     { path: '/devices', icon: mdiRouter, label: 'Devices' },
     { path: '/alias', icon: mdiShieldSearch, label: 'Alias' },
     { path: '/rules', icon: mdiWallFire, label: 'Firewall Rules' },
+    { path: '/logs', icon: mdiTextBoxSearch, label: 'Firewall Logs' },
     { path: '/updates', icon: mdiUpdate, label: 'Updates' },
     { path: '/settings', icon: mdiCog, label: 'Settings' },
   ];

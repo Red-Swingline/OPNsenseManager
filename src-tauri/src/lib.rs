@@ -8,6 +8,7 @@ mod firewall;
 mod power;
 mod traffic;
 mod update_checker;
+mod firewall_logs;
 
 use db::Database;
 use tauri::Manager;
@@ -47,6 +48,11 @@ pub fn run() {
             firewall::get_firewall_rules,
             firewall::toggle_firewall_rule,  
             firewall::apply_firewall_changes,
+            firewall_logs::get_log_filters,
+            firewall_logs::get_interface_names,
+            firewall_logs::get_firewall_logs,
+            firewall_logs::apply_filters,
+            firewall_logs::limit_logs,
             power::reboot_firewall,
             traffic::get_interface_traffic,
             update_checker::get_current_firmware_status,
