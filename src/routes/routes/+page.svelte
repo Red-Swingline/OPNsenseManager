@@ -202,7 +202,11 @@
             selected: selectAll,
         }));
     }
-
+    function handleRouteSelection(route: Route & { selected?: boolean }) {
+        route.selected = !route.selected;
+        // Update selectAll based on whether all routes are selected
+        selectAll = routes.every((r) => r.selected);
+    }
     function handleBulkAction() {
         if (!hasSelectedRoutes) return;
 
@@ -237,18 +241,6 @@
                             </select>
                         {/if}
                         <button
-                            class="btn btn-sm btn-ghost"
-                            on:click={toggleSelectAll}
-                            title={selectAll ? "Deselect All" : "Select All"}
-                        >
-                            <svg class="w-5 h-5" viewBox="0 0 24 24">
-                                <path
-                                    fill="currentColor"
-                                    d={selectAll ? mdiSelectOff : mdiSelectAll}
-                                />
-                            </svg>
-                        </button>
-                        <button
                             class="btn btn-sm btn-primary"
                             on:click={openAddModal}
                         >
@@ -279,12 +271,14 @@
                             <thead>
                                 <tr>
                                     <th class="w-10">
-                                        <input
-                                            type="checkbox"
-                                            class="checkbox checkbox-sm"
-                                            bind:checked={selectAll}
-                                            on:change={toggleSelectAll}
-                                        />
+                                        <label class="cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                class="checkbox checkbox-sm"
+                                                checked={selectAll}
+                                                on:change={toggleSelectAll}
+                                            />
+                                        </label>
                                     </th>
                                     <th>Status</th>
                                     <th>Network</th>
