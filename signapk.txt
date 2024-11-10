@@ -1,0 +1,5 @@
+/home/steve/Android/Sdk/build-tools/34.0.0/apksigner sign \
+--ks ~/Documents/apk_key/myKeystore/keystore1.jks \
+--ks-key-alias key0 \
+--out app-release-signed.apk \
+/home/steve/OPNsenseManager/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk

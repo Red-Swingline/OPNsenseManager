@@ -2281,7 +2281,7 @@ dependencies = [
 
 [[package]]
 name = "opnsensemanager"
-version = "3.0.2"
+version = "3.0.5"
 dependencies = [
  "argon2",
  "base64 0.22.1",
