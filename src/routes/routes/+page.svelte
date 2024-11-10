@@ -221,144 +221,185 @@
 </script>
 
 <AppLayout>
-    <div class="container mx-auto px-4 py-8">
-        <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-2xl font-bold card-title">
-                        Network Routes
-                    </h1>
-                    <div class="space-x-2 flex items-center">
-                        {#if hasSelectedRoutes}
-                            <select
-                                class="select select-bordered select-sm"
-                                bind:value={selectedAction}
-                                on:change={handleBulkAction}
-                            >
-                                <option value="">Bulk Actions</option>
-                                <option value="toggle">Toggle Selected</option>
-                                <option value="delete">Delete Selected</option>
-                            </select>
-                        {/if}
-                        <button
-                            class="btn btn-sm btn-primary"
-                            on:click={openAddModal}
-                        >
-                            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                                <path fill="currentColor" d={mdiPlus} />
-                            </svg>
-                            Add Route
-                        </button>
-                        <button
-                            class="btn btn-sm btn-ghost"
-                            on:click={loadRoutes}
-                            title="Refresh"
-                        >
-                            <svg class="w-5 h-5" viewBox="0 0 24 24">
-                                <path fill="currentColor" d={mdiRefresh} />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+
 
                 {#if isLoading}
                     <div class="flex justify-center items-center h-64">
                         <span class="loading loading-spinner loading-lg"></span>
                     </div>
                 {:else}
-                    <div class="overflow-x-auto">
-                        <table class="table w-full">
-                            <thead>
-                                <tr>
-                                    <th class="w-10">
-                                        <label class="cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                class="checkbox checkbox-sm"
-                                                checked={selectAll}
-                                                on:change={toggleSelectAll}
-                                            />
-                                        </label>
-                                    </th>
-                                    <th>Status</th>
-                                    <th>Network</th>
-                                    <th>Gateway</th>
-                                    <th>Description</th>
-                                    <th class="text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#each routes as route}
-                                    <tr
-                                        class="hover transition-colors duration-200"
-                                    >
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                class="checkbox checkbox-sm"
-                                                bind:checked={route.selected}
-                                            />
-                                        </td>
-                                        <td>
-                                            <button
-                                                class="btn btn-sm btn-ghost"
-                                                on:click={() =>
-                                                    openToggleConfirmation(
-                                                        route,
-                                                    )}
-                                                title={route.disabled === "1"
-                                                    ? "Enable route"
-                                                    : "Disable route"}
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body p-0">
+                            <!-- Removed default padding for cleaner table look -->
+                            <div class="p-4 border-b border-base-200">
+                                <!-- Header section with controls -->
+                                <div class="flex justify-between items-center">
+                                    <h1 class="text-2xl font-bold">
+                                        Network Routes
+                                    </h1>
+                                    <div class="space-x-2 flex items-center">
+                                        {#if hasSelectedRoutes}
+                                            <select
+                                                class="select select-bordered select-sm"
+                                                bind:value={selectedAction}
+                                                on:change={handleBulkAction}
                                             >
-                                                <svg
-                                                    class="w-5 h-5"
-                                                    viewBox="0 0 24 24"
+                                                <option value=""
+                                                    >Bulk Actions</option
                                                 >
-                                                    <path
-                                                        fill={route.disabled ===
-                                                        "1"
-                                                            ? "var(--error)"
-                                                            : "var(--success)"}
-                                                        d={route.disabled ===
-                                                        "1"
-                                                            ? mdiClose
-                                                            : mdiCheck}
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                        <td>{route.network}</td>
-                                        <td>{route.gateway}</td>
-                                        <td>{route.descr}</td>
-                                        <td class="text-right">
-                                            <button
-                                                class="btn btn-sm btn-ghost"
-                                                on:click={() =>
-                                                    openDeleteConfirmation(
-                                                        route,
-                                                    )}
-                                                title="Delete route"
+                                                <option value="toggle"
+                                                    >Toggle Selected</option
+                                                >
+                                                <option value="delete"
+                                                    >Delete Selected</option
+                                                >
+                                            </select>
+                                        {/if}
+                                        <button
+                                            class="btn btn-sm btn-primary"
+                                            on:click={openAddModal}
+                                        >
+                                            <svg
+                                                class="w-5 h-5 mr-2"
+                                                viewBox="0 0 24 24"
                                             >
-                                                <svg
-                                                    class="w-5 h-5"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        fill="currentColor"
-                                                        d={mdiDelete}
+                                                <path
+                                                    fill="currentColor"
+                                                    d={mdiPlus}
+                                                />
+                                            </svg>
+                                            Add Route
+                                        </button>
+                                        <button
+                                            class="btn btn-sm btn-ghost"
+                                            on:click={loadRoutes}
+                                            title="Refresh"
+                                        >
+                                            <svg
+                                                class="w-5 h-5"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    fill="currentColor"
+                                                    d={mdiRefresh}
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="table w-full">
+                                    <thead>
+                                        <tr class="bg-base-200/50">
+                                            <th class="w-10">
+                                                <label class="cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="checkbox checkbox-sm"
+                                                        checked={selectAll}
+                                                        on:change={toggleSelectAll}
                                                     />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
+                                                </label>
+                                            </th>
+                                            <th>Status</th>
+                                            <th>Network</th>
+                                            <th>Gateway</th>
+                                            <th>Description</th>
+                                            <th class="text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {#each routes as route}
+                                            <tr
+                                                class="hover:bg-base-200 border-base-200 transition-colors duration-200 {route.disabled ===
+                                                '1'
+                                                    ? 'bg-base-200/50 text-base-content/70'
+                                                    : ''}"
+                                            >
+                                                <td>
+                                                    <label
+                                                        class="cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            class="checkbox checkbox-sm"
+                                                            bind:checked={route.selected}
+                                                            on:change={() =>
+                                                                handleRouteSelection(
+                                                                    route,
+                                                                )}
+                                                        />
+                                                    </label>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        class="badge badge-{route.disabled ===
+                                                        '1'
+                                                            ? 'error'
+                                                            : 'success'} gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                                        on:click={() =>
+                                                            openToggleConfirmation(
+                                                                route,
+                                                            )}
+                                                        title={route.disabled ===
+                                                        "1"
+                                                            ? "Click to enable"
+                                                            : "Click to disable"}
+                                                    >
+                                                        <svg
+                                                            class="w-3 h-3"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                fill="currentColor"
+                                                                d={route.disabled ===
+                                                                "1"
+                                                                    ? mdiClose
+                                                                    : mdiCheck}
+                                                            />
+                                                        </svg>
+                                                        {route.disabled === "1"
+                                                            ? "Disabled"
+                                                            : "Enabled"}
+                                                    </button>
+                                                </td>
+                                                <td class="font-mono"
+                                                    >{route.network}</td
+                                                >
+                                                <td class="font-mono"
+                                                    >{route.gateway}</td
+                                                >
+                                                <td>{route.descr || "—"}</td>
+                                                <td class="text-right">
+                                                    <button
+                                                        class="btn btn-ghost btn-sm text-error hover:bg-error/20"
+                                                        on:click={() =>
+                                                            openDeleteConfirmation(
+                                                                route,
+                                                            )}
+                                                        title="Delete route"
+                                                    >
+                                                        <svg
+                                                            class="w-5 h-5"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                fill="currentColor"
+                                                                d={mdiDelete}
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {/each}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 {/if}
-            </div>
-        </div>
-    </div>
 </AppLayout>
 
 <!-- Add Route Modal -->
