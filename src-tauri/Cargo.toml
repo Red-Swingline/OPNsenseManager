@@ -1,8 +1,8 @@
 [package]
 name = "opnsensemanager"
-version = "3.0.2"
+version = "3.0.5"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["Steve Thacher"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

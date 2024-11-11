@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch, mdiWallFire, mdiPowerStandby, mdiUpdate, mdiThemeLightDark, mdiTextBoxSearch } from '@mdi/js';
+  import { mdiMenu, mdiHome, mdiCog, mdiLogout, mdiRouter, mdiShieldSearch, 
+           mdiWallFire, mdiPowerStandby, mdiUpdate, mdiThemeLightDark, 
+           mdiTextBoxSearch, mdiMapMarkerPath } from '@mdi/js';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/authStore';
   import { page } from '$app/stores';
@@ -15,6 +17,7 @@
     { path: '/', icon: mdiHome, label: 'Home' },
     { path: '/devices', icon: mdiRouter, label: 'Devices' },
     { path: '/alias', icon: mdiShieldSearch, label: 'Alias' },
+    { path: '/routes', icon: mdiMapMarkerPath, label: 'Routes' },
     { path: '/rules', icon: mdiWallFire, label: 'Firewall Rules' },
     { path: '/logs', icon: mdiTextBoxSearch, label: 'Firewall Logs' },
     { path: '/updates', icon: mdiUpdate, label: 'Updates' },
@@ -59,19 +62,19 @@
   }
 
   async function handleReboot() {
-  try {
-    const response = await invoke('reboot_firewall');
-    if (response && response.status === "ok") {
-      toasts.success('Firewall reboot initiated successfully');
-      closeRebootDialog();
-    } else {
-      toasts.error(`Failed to reboot firewall: Unexpected response`);
+    try {
+      const response = await invoke('reboot_firewall');
+      if (response && response.status === "ok") {
+        toasts.success('Firewall reboot initiated successfully');
+        closeRebootDialog();
+      } else {
+        toasts.error(`Failed to reboot firewall: Unexpected response`);
+      }
+    } catch (error) {
+      console.error('Reboot error:', error);
+      toasts.error(`Failed to reboot firewall: ${error}`);
     }
-  } catch (error) {
-    console.error('Reboot error:', error);
-    toasts.error(`Failed to reboot firewall: ${error}`);
   }
-}
 
   function toggleTheme() {
     theme = theme === 'light' ? 'dark' : 'light';
@@ -242,16 +245,16 @@
           </div>
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-            on:click={handleReboot}>
-            Reboot
-          </button>
-          <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            on:click={closeRebootDialog}>
-            Cancel
-          </button>
+              on:click={handleReboot}>
+              Reboot
+            </button>
+            <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              on:click={closeRebootDialog}>
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-{/if}
+  {/if}
 </div>
