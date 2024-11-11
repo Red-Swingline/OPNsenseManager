@@ -222,14 +222,14 @@
 </script>
 
 <AppLayout>
-    <div class="container mx-auto p-2">
-        <div class="card bg-base-100 shadow-xl">
-            <div class="card-body p-2">
-                <!-- Header Controls -->
-                <div class="flex flex-col gap-2 mb-4">
+    <div class="container mx-auto p-4 max-w-5xl">
+        <!-- Header Controls Card -->
+        <div class="card bg-base-100 shadow-xl mb-6">
+            <div class="card-body p-4">
+                <div class="flex flex-col gap-2">
                     <div class="flex justify-between items-center">
                         <h1 class="text-xl font-bold">Network Routes</h1>
-                        <div class="flex gap-1">
+                        <div class="flex gap-2">
                             <label class="cursor-pointer flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -238,18 +238,12 @@
                                     on:change={toggleSelectAll}
                                 />
                             </label>
-                            <button
-                                class="btn btn-sm btn-ghost"
-                                on:click={loadRoutes}
-                            >
+                            <button class="btn btn-sm btn-ghost" on:click={loadRoutes}>
                                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                                     <path fill="currentColor" d={mdiRefresh} />
                                 </svg>
                             </button>
-                            <button
-                                class="btn btn-sm btn-primary"
-                                on:click={openAddModal}
-                            >
+                            <button class="btn btn-sm btn-primary" on:click={openAddModal}>
                                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                                     <path fill="currentColor" d={mdiPlus} />
                                 </svg>
@@ -262,113 +256,81 @@
                             bind:value={selectedAction}
                             on:change={handleBulkAction}
                         >
-                            <option value=""
-                                >Bulk Actions ({selectedRoutes.length} selected)</option
-                            >
+                            <option value="">Bulk Actions ({selectedRoutes.length} selected)</option>
                             <option value="toggle">Toggle Selected</option>
                             <option value="delete">Delete Selected</option>
                         </select>
                     {/if}
                 </div>
-
-                {#if isLoading}
-                    <div class="flex justify-center items-center h-32">
-                        <span class="loading loading-spinner loading-lg"></span>
-                    </div>
-                {:else}
-                    <div class="space-y-2">
-                        {#each routes as route (route.uuid)}
-                            <div
-                                class="card bg-base-100 shadow hover:shadow-md transition-shadow {route.disabled ===
-                                '1'
-                                    ? 'opacity-60'
-                                    : ''} border-l-4 {route.disabled === '1'
-                                    ? 'border-error'
-                                    : 'border-success'}"
-                            >
-                                <div class="card-body p-3">
-                                    <div
-                                        class="flex items-center justify-between gap-2"
-                                    >
-                                        <label
-                                            class="cursor-pointer flex items-center gap-2 flex-1"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                class="checkbox checkbox-sm"
-                                                checked={route.selected}
-                                                on:change={() =>
-                                                    handleRouteSelection(route)}
-                                            />
-                                            <span class="font-mono text-sm"
-                                                >{route.network}</span
-                                            >
-                                        </label>
-                                        <div class="flex items-center gap-1">
-                                            <button
-                                                class="badge badge-{route.disabled ===
-                                                '1'
-                                                    ? 'error'
-                                                    : 'success'} gap-1"
-                                                on:click={() =>
-                                                    openToggleConfirmation(
-                                                        route,
-                                                    )}
-                                            >
-                                                <svg
-                                                    class="w-3 h-3"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        fill="currentColor"
-                                                        d={route.disabled ===
-                                                        "1"
-                                                            ? mdiClose
-                                                            : mdiCheck}
-                                                    />
-                                                </svg>
-                                                {route.disabled === "1"
-                                                    ? "Off"
-                                                    : "On"}
-                                            </button>
-                                            <button
-                                                class="btn btn-ghost btn-xs btn-square text-error"
-                                                on:click={() =>
-                                                    openDeleteConfirmation(
-                                                        route,
-                                                    )}
-                                            >
-                                                <svg
-                                                    class="w-4 h-4"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        fill="currentColor"
-                                                        d={mdiDelete}
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="text-sm pl-8">
-                                        <div class="font-mono opacity-75">
-                                            {route.gateway}
-                                        </div>
-                                        {#if route.descr}
-                                            <div
-                                                class="text-xs opacity-60 truncate"
-                                            >
-                                                {route.descr}
-                                            </div>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </div>
-                        {/each}
-                    </div>
-                {/if}
             </div>
         </div>
+    
+        <!-- Routes Listing -->
+        {#if isLoading}
+            <div class="flex justify-center items-center h-32">
+                <span class="loading loading-spinner loading-lg"></span>
+            </div>
+        {:else}
+            {#each routes as route (route.uuid)}
+                <div 
+                    class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-200 mb-4 overflow-hidden"
+                    class:opacity-60={route.disabled === '1'}
+                >
+                    <div class="card-body p-4 relative">
+                        <!-- Status Indicator -->
+                        <div 
+                            class="absolute left-0 top-0 bottom-0 w-1.5 {route.disabled === '1' ? 'bg-error' : 'bg-success'}"
+                        ></div>
+    
+                        <div class="flex items-center justify-between gap-4 pl-2">
+                            <!-- Left Side: Checkbox and Info -->
+                            <label class="cursor-pointer flex items-center gap-4 flex-1">
+                                <input
+                                    type="checkbox"
+                                    class="checkbox checkbox-sm"
+                                    checked={route.selected}
+                                    on:change={() => handleRouteSelection(route)}
+                                />
+                                <div class="flex-1 min-w-0"> <!-- min-w-0 helps with text truncation -->
+                                    <div class="font-mono text-base font-medium">{route.network}</div>
+                                    <div class="font-mono text-sm opacity-75 mt-1">{route.gateway}</div>
+                                    {#if route.descr}
+                                        <div class="text-sm opacity-60 mt-1 truncate">
+                                            {route.descr}
+                                        </div>
+                                    {/if}
+                                </div>
+                            </label>
+    
+                            <!-- Right Side: Action Buttons -->
+                            <div class="flex items-center gap-3">
+                                <button
+                                    class="btn btn-sm {route.disabled === '1' ? 'btn-error' : 'btn-success'} gap-2"
+                                    on:click={() => openToggleConfirmation(route)}
+                                >
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                        <path
+                                            fill="currentColor"
+                                            d={route.disabled === "1" ? mdiClose : mdiCheck}
+                                        />
+                                    </svg>
+                                    {route.disabled === "1" ? "Off" : "On"}
+                                </button>
+                                
+                                <button
+                                    class="btn btn-sm btn-ghost text-error hover:bg-error hover:text-white transition-colors"
+                                    on:click={() => openDeleteConfirmation(route)}
+                                >
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d={mdiDelete} />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {/each}
+        {/if}
     </div>
 
     <!-- Add Route Modal -->
